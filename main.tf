@@ -200,7 +200,7 @@ resource "null_resource" "function_app_publish" {
   }
   depends_on = [local.publish_code_command, null_resource.install_azure_cli]
   triggers = {
-    input_json           = filemd5(var.archive_file.output_path)
+    input_json           = filemd5(data.archive_file.log_pipeline_function.output_path)
     publish_code_command = local.publish_code_command
   }
 }
