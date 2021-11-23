@@ -5,12 +5,6 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 2.65"
     }
-
-    time-provider = {
-      source  = "hashicorp/time"
-      version = "~> 0.7.2"
-    }
-
   }
 
   required_version = ">= 0.14.9"
@@ -140,14 +134,12 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 
 }
 
-resource "time_static" "now" {}
-
 data "azurerm_storage_account_blob_container_sas" "storage_account_blob_container_sas" {
   connection_string = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string
   container_name    = azurerm_storage_container.log_pipeline_function_app_storage_container.name
 
-  start  = time_static.now.rfc3339
-  expiry = timeadd(time_static.now.rfc3339, "4h")
+  start  = timestamp()
+  expiry = timeadd(start, "4h")
 
   permissions {
     read   = true
