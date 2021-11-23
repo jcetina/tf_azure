@@ -139,7 +139,7 @@ data "azurerm_storage_account_blob_container_sas" "storage_account_blob_containe
   container_name    = azurerm_storage_container.log_pipeline_function_app_storage_container.name
 
   start  = timestamp()
-  expiry = timeadd(start, "4h")
+  expiry = timeadd(timestamp(), "4h")
 
   permissions {
     read   = true
