@@ -184,7 +184,7 @@ locals {
       apt-get install azure-cli
 
       EOH
-  publish_code_command      = "az webapp deployment source config-zip --resource-group ${azurerm_resource_group.log_pipeline.name} --name ${azurerm_function_app.log_pipeline_function_app.name} --src ${var.archive_file.output_path}"
+  publish_code_command      = "az webapp deployment source config-zip --resource-group ${azurerm_resource_group.log_pipeline.name} --name ${azurerm_function_app.log_pipeline_function_app.name} --src ${data.archive_file.log_pipeline_function.output_path}"
 }
 
 resource "null_resource" "install_azure_cli" {
