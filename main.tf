@@ -178,7 +178,7 @@ resource "null_resource" "function_app_publish" {
   provisioner "local-exec" {
     command = local.publish_code_command
   }
-  depends_on = [local.publish_code_command, null_resource.install_azure_cli]
+  depends_on = [local.publish_code_command]
   triggers = {
     input_json           = filemd5(data.archive_file.log_pipeline_function.output_path)
     publish_code_command = local.publish_code_command
