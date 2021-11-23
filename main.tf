@@ -82,3 +82,71 @@ resource "azurerm_servicebus_subscription" "log_pipeline" {
   default_message_ttl = "P14D"
   forward_to          = azurerm_servicebus_queue.log_pipeline.name
 }
+
+
+resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
+  name                     = "logfunctionappstorage"
+  resource_group_name      = azurerm_resource_group.log_pipeline.name
+  location                 = azurerm_resource_group.log_pipeline.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+resource "azurerm_storage_container" "log_pipeline_function_app_storage_container" {
+    name = "log-pipeline-app-storage-container"
+    storage_account_name = azurerm_storage_account.log_pipeline_function_app_storage.name
+    container_access_type = "private"
+}
+
+resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
+  name                = "LogPipelineFunctionAppServicePlan"
+  location            = azurerm_resource_group.log_pipeline.location
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  kind                = "FunctionApp"
+
+  sku {
+    tier = "Dynamic"
+    size = "Y1"
+  }
+}
+
+resource "azurerm_application_insights" "log_pipeline_function_application_insights" {
+  name                = "LogPipelineFunctionApplicationInsights"
+  location            = azurerm_resource_group.log_pipeline.location
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  application_type    = "other"
+}
+
+resource "azurerm_function_app" "log_pipeline_function_app" {
+  name                       = "LogPipelineFunction"
+  location                   = azurerm_resource_group.log_pipeline.location
+  resource_group_name        = azurerm_resource_group.log_pipeline.name
+  app_service_plan_id        = azurerm_app_service_plan.log_pipeline_function_app_plan.id
+  storage_account_name       = azurerm_storage_account.log_pipeline_function_app_storage.name
+  storage_account_access_key = azurerm_storage_account.log_pipeline_function_app_storage.primary_access_key
+
+
+  os_type = "linux"
+  version                    = "~3"
+  site_config {
+    use_32_bit_worker_process = false
+  }
+
+}
+
+data "azurerm_storage_account_blob_container_sas" "storage_account_blob_container_sas" {
+  connection_string = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string
+  container_name    = azurerm_storage_container.log_pipeline_function_app_storage_container.name
+
+  start = "2021-11-01T00:00:00Z"
+  expiry = "2022-11-01T00:00:00Z"
+
+  permissions {
+    read   = true
+    add    = false
+    create = false
+    write  = false
+    delete = false
+    list   = false
+  }
+}
