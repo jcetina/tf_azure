@@ -5,12 +5,22 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 2.65"
     }
+
+    time_provider = {
+      source  = "hashicorp/time"
+      version = "~> 0.7.2"
+    }
+
   }
 
   required_version = ">= 0.14.9"
 }
 
 provider "azurerm" {
+  features {}
+}
+
+provider "time_provider" {
   features {}
 }
 
@@ -39,11 +49,11 @@ resource "azurerm_eventgrid_system_topic" "log_pipeline" {
 }
 
 resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
-  name                = "LogPipelineEventSubscription"
-  system_topic        = azurerm_eventgrid_system_topic.log_pipeline.name
-  resource_group_name = azurerm_resource_group.log_pipeline.name
+  name                          = "LogPipelineEventSubscription"
+  system_topic                  = azurerm_eventgrid_system_topic.log_pipeline.name
+  resource_group_name           = azurerm_resource_group.log_pipeline.name
   service_bus_topic_endpoint_id = azurerm_servicebus_topic.log_pipeline.id
-  included_event_types   = ["Microsoft.Storage.BlobCreated"]
+  included_event_types          = ["Microsoft.Storage.BlobCreated"]
 }
 
 resource "azurerm_servicebus_namespace" "log_pipeline" {
@@ -51,7 +61,7 @@ resource "azurerm_servicebus_namespace" "log_pipeline" {
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   sku                 = "Standard"
-  
+
 }
 
 resource "azurerm_servicebus_topic" "log_pipeline" {
@@ -59,7 +69,7 @@ resource "azurerm_servicebus_topic" "log_pipeline" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
-  
+
   enable_partitioning = true
 }
 
@@ -68,7 +78,7 @@ resource "azurerm_servicebus_queue" "log_pipeline" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
-  enable_partitioning = true
+  enable_partitioning                  = true
   dead_lettering_on_message_expiration = true
 }
 
@@ -93,9 +103,9 @@ resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
 }
 
 resource "azurerm_storage_container" "log_pipeline_function_app_storage_container" {
-    name = "log-pipeline-app-storage-container"
-    storage_account_name = azurerm_storage_account.log_pipeline_function_app_storage.name
-    container_access_type = "private"
+  name                  = "log-pipeline-app-storage-container"
+  storage_account_name  = azurerm_storage_account.log_pipeline_function_app_storage.name
+  container_access_type = "private"
 }
 
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
@@ -127,19 +137,21 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 
 
   os_type = "linux"
-  version                    = "~3"
+  version = "~3"
   site_config {
     use_32_bit_worker_process = false
   }
 
 }
 
+resource "time_static" "now" {}
+
 data "azurerm_storage_account_blob_container_sas" "storage_account_blob_container_sas" {
   connection_string = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string
   container_name    = azurerm_storage_container.log_pipeline_function_app_storage_container.name
 
-  start = "2021-11-01T00:00:00Z"
-  expiry = "2022-11-01T00:00:00Z"
+  start  = time_static.now.rfc3339
+  expiry = timeadd(time_static.now.rfc3339, "4h")
 
   permissions {
     read   = true
