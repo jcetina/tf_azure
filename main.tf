@@ -98,6 +98,13 @@ resource "azurerm_storage_container" "log_pipeline_function_app_storage_containe
   container_access_type = "private"
 }
 
+resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
+  name                   = "log_pipeline_function.zip"
+  storage_account_name   = azurerm_storage_account.log_pipeline_function_app_storage.name
+  storage_container_name = azurerm_storage_container.log_pipeline_function_app_storage_container.name
+  type                   = "Block"
+  source                 = data.archive_file.log_pipeline_function.output_path
+}
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
   name                = "LogPipelineFunctionAppServicePlan"
   location            = azurerm_resource_group.log_pipeline.location
@@ -125,6 +132,11 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   storage_account_name       = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_account_access_key = azurerm_storage_account.log_pipeline_function_app_storage.primary_access_key
 
+  app_settings = {
+    "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}${data.azurerm_storage_account_blob_container_sas.storage_account_blob_container_token.sas}",
+    "FUNCTIONS_WORKER_RUNTIME"       = "python",
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
+  }
 
   os_type = "linux"
   version = "~3"
@@ -134,10 +146,16 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 
 }
 
-data "azurerm_storage_account_blob_container_sas" "storage_account_blob_container_sas" {
+data "archive_file" "log_pipeline_function" {
+  type        = "zip"
+  source_dir  = "${path.module}/log_pipeline_function"
+  output_path = "log_pipeline_function.zip"
+}
+
+data "azurerm_storage_account_blob_container_sas" "storage_account_blob_container_token" {
   connection_string = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string
   container_name    = azurerm_storage_container.log_pipeline_function_app_storage_container.name
-
+  # start and expirty could probably be locals later
   start  = timestamp()
   expiry = timeadd(timestamp(), "4h")
 
@@ -148,5 +166,41 @@ data "azurerm_storage_account_blob_container_sas" "storage_account_blob_containe
     write  = false
     delete = false
     list   = false
+  }
+}
+
+locals {
+  install_azure_cli_command = <<EOH
+
+      echo "Installing AzureCLI"
+      apt-get update
+            # install requirements
+      apt-get install -y curl apt-transport-https lsb-release gnupg jq
+            # add Microsoft as a trusted source
+      curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc.gpg > /dev/null
+      AZ_REPO=$(lsb_release -cs)
+      echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
+      apt-get update
+      apt-get install azure-cli
+
+      EOH
+  publish_code_command      = "az webapp deployment source config-zip --resource-group ${azurerm_resource_group.log_pipeline.name} --name ${azurerm_function_app.log_pipeline_function_app.name} --src ${var.archive_file.output_path}"
+}
+
+resource "null_resource" "install_azure_cli" {
+  provisioner "local-exec" {
+    command     = local.install_azure_cli_command
+    interpreter = ["/bin/bash", "-c"]
+  }
+}
+
+resource "null_resource" "function_app_publish" {
+  provisioner "local-exec" {
+    command = local.publish_code_command
+  }
+  depends_on = [local.publish_code_command, null_resource.install_azure_cli]
+  triggers = {
+    input_json           = filemd5(var.archive_file.output_path)
+    publish_code_command = local.publish_code_command
   }
 }
