@@ -6,7 +6,7 @@ terraform {
       version = "~> 2.65"
     }
 
-    time_provider = {
+    time-provider = {
       source  = "hashicorp/time"
       version = "~> 0.7.2"
     }
@@ -20,7 +20,7 @@ provider "azurerm" {
   features {}
 }
 
-provider "time_provider" {
+provider "time-provider" {
   features {}
 }
 
