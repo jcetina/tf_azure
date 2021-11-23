@@ -20,10 +20,6 @@ provider "azurerm" {
   features {}
 }
 
-provider "time-provider" {
-  features {}
-}
-
 resource "azurerm_resource_group" "log_pipeline" {
   name     = "LogPipelineResourceGroup"
   location = "eastus"
