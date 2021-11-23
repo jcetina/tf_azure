@@ -170,29 +170,9 @@ data "azurerm_storage_account_blob_container_sas" "storage_account_blob_containe
 }
 
 locals {
-  install_azure_cli_command = <<EOH
-
-      echo "Installing AzureCLI"
-      apt-get update
-            # install requirements
-      apt-get install -y curl apt-transport-https lsb-release gnupg jq
-            # add Microsoft as a trusted source
-      curl -sL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc.gpg > /dev/null
-      AZ_REPO=$(lsb_release -cs)
-      echo "deb [arch=amd64] https://packages.microsoft.com/repos/azure-cli/ $AZ_REPO main" | sudo tee /etc/apt/sources.list.d/azure-cli.list
-      apt-get update
-      apt-get install azure-cli
-
-      EOH
   publish_code_command      = "az webapp deployment source config-zip --resource-group ${azurerm_resource_group.log_pipeline.name} --name ${azurerm_function_app.log_pipeline_function_app.name} --src ${data.archive_file.log_pipeline_function.output_path}"
 }
 
-resource "null_resource" "install_azure_cli" {
-  provisioner "local-exec" {
-    command     = local.install_azure_cli_command
-    interpreter = ["/bin/bash", "-c"]
-  }
-}
 
 resource "null_resource" "function_app_publish" {
   provisioner "local-exec" {
