@@ -6,7 +6,6 @@ terraform {
       version = "~> 2.65"
     }
   }
-
   required_version = ">= 0.14.9"
 }
 
@@ -156,8 +155,8 @@ data "azurerm_storage_account_blob_container_sas" "storage_account_blob_containe
   connection_string = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string
   container_name    = azurerm_storage_container.log_pipeline_function_app_storage_container.name
   # start and expirty could probably be locals later
-  start  = timeadd(timestamp(), "-2h")
-  expiry = timeadd(timestamp(), "2h")
+  start  = timeadd(timestamp(), "-4h")
+  expiry = timeadd(timestamp(), "4h")
 
   permissions {
     read   = true
