@@ -79,6 +79,14 @@ resource "azurerm_servicebus_queue" "log_pipeline" {
   dead_lettering_on_message_expiration = true
 }
 
+resource "azurerm_servicebus_queue" "log_pipeline_shadow_queue" {
+  name                = "LogPipelineServiceBusShadowQueue"
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
+
+  enable_partitioning                  = true
+}
+
 resource "azurerm_servicebus_subscription" "log_pipeline" {
   name                = "LogPipelineServiceBusSubcription"
   resource_group_name = azurerm_resource_group.log_pipeline.name
@@ -88,6 +96,17 @@ resource "azurerm_servicebus_subscription" "log_pipeline" {
   max_delivery_count  = 10
   default_message_ttl = "P14D"
   forward_to          = azurerm_servicebus_queue.log_pipeline.name
+}
+
+resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
+  name                = "LogPipelineServiceBusSubcription"
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
+  topic_name          = azurerm_servicebus_topic.log_pipeline.name
+
+  max_delivery_count  = 10
+  default_message_ttl = "P14D"
+  forward_to          = azurerm_servicebus_queue.log_pipeline_shadow_queue.name
 }
 
 
