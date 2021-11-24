@@ -137,7 +137,7 @@ resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
   name                = "LogPipelineFunctionAppServicePlan"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
-  kind                = "Linux"
+  kind                = "FunctionApp"
   reserved            = true
   sku {
     tier = "Dynamic"
