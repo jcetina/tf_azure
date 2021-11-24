@@ -46,6 +46,8 @@ name: 'Terraform'
 
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
     branches:
     - main
   pull_request:
