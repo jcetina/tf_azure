@@ -6,7 +6,7 @@
       "type": "serviceBusTrigger",
       "direction": "in",
       "queueName": "LogPipelineServiceBusQueue",
-      "connection": ""
+      "connection": "AzureServiceBusConnectionString"
     }
   ]
 }
