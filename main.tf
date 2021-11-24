@@ -101,7 +101,7 @@ resource "azurerm_servicebus_subscription" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
-  name                = "LogPipelineServiceBusSubcription"
+  name                = "LogPipelineServiceBusShadowSubcription"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
   topic_name          = azurerm_servicebus_topic.log_pipeline.name
