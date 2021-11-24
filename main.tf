@@ -131,11 +131,13 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   storage_account_name       = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_account_access_key = azurerm_storage_account.log_pipeline_function_app_storage.primary_access_key
 
+  /*
   app_settings = {
     "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}${data.azurerm_storage_account_blob_container_sas.storage_account_blob_container_token.sas}",
     "FUNCTIONS_WORKER_RUNTIME"       = "python",
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
   }
+*/
 
   os_type = "linux"
   version = "~3"
@@ -173,6 +175,7 @@ locals {
   publish_code_command = "az webapp deployment source config-zip --resource-group ${azurerm_resource_group.log_pipeline.name} --name ${azurerm_function_app.log_pipeline_function_app.name} --src ${data.archive_file.log_pipeline_function.output_path}"
 }
 
+/*
 resource "null_resource" "az_login" {
   provisioner "local-exec" {
     command = local.az_login_command
@@ -194,3 +197,4 @@ resource "null_resource" "function_app_publish" {
     publish_code_command = local.publish_code_command
   }
 }
+*/
