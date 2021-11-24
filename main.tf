@@ -7,6 +7,14 @@ terraform {
     }
   }
   required_version = ">= 0.14.9"
+  backend "remote" {
+    organization = "cetinas-dot-org"
+
+    workspaces {
+      name = "tf_azure_github_actions"
+    }
+  }
+
 }
 
 provider "azurerm" {
