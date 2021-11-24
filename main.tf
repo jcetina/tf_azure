@@ -169,15 +169,26 @@ data "azurerm_storage_account_blob_container_sas" "storage_account_blob_containe
 }
 
 locals {
-  publish_code_command      = "az webapp deployment source config-zip --resource-group ${azurerm_resource_group.log_pipeline.name} --name ${azurerm_function_app.log_pipeline_function_app.name} --src ${data.archive_file.log_pipeline_function.output_path}"
+  az_login_command     = "az login --service-principal -u $ARM_CLIENT_ID -p $ARM_CLIENT_SECRET --tenant $ARM_TENANT_ID"
+  publish_code_command = "az webapp deployment source config-zip --resource-group ${azurerm_resource_group.log_pipeline.name} --name ${azurerm_function_app.log_pipeline_function_app.name} --src ${data.archive_file.log_pipeline_function.output_path}"
 }
 
+resource "null_resource" "az_login" {
+  provisioner "local-exec" {
+    command = local.az_login_command
+  }
+  depends_on = [local.az_login_command]
+  triggers = {
+    input_json           = filemd5(data.archive_file.log_pipeline_function.output_path)
+    publish_code_command = local.publish_code_command
+  }
+}
 
 resource "null_resource" "function_app_publish" {
   provisioner "local-exec" {
     command = local.publish_code_command
   }
-  depends_on = [local.publish_code_command]
+  depends_on = [local.publish_code_command, null_resource.az_login]
   triggers = {
     input_json           = filemd5(data.archive_file.log_pipeline_function.output_path)
     publish_code_command = local.publish_code_command
