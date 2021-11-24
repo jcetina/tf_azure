@@ -55,6 +55,12 @@ jobs:
     name: 'Terraform'
     runs-on: ubuntu-latest
     environment: production
+    
+    env:
+      ARM_SUBSCRIPTION_ID: ad3b85d9-1354-4383-a30c-6383716082e4
+      ARM_TENANT_ID: 53a3b2a4-fb4f-4bea-8637-b567de9faebc
+      ARM_CLIENT_ID: b49af211-6456-4044-805b-99ce5050fb3c
+      ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:
@@ -65,6 +71,11 @@ jobs:
     # Checkout the repository to the GitHub Actions runner
     - name: Checkout
       uses: actions/checkout@v2
+      
+    - name: Install sed
+      run: |
+        sudo apt-get update
+        sudo apt-get install sed
 
     # Install the latest version of Terraform CLI and configure the Terraform CLI configuration file with a Terraform Cloud user API token
     - name: Setup Terraform
