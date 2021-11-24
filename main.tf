@@ -84,7 +84,7 @@ resource "azurerm_servicebus_queue" "log_pipeline_shadow_queue" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
-  enable_partitioning                  = true
+  enable_partitioning = true
 }
 
 resource "azurerm_servicebus_subscription" "log_pipeline" {
