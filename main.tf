@@ -164,10 +164,9 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   app_settings = {
     "AzureServiceBusConnectionString" = azurerm_servicebus_namespace.log_pipeline.default_primary_connection_string,
     "AzureWebJobsStorage"             = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string,
-    # "WEBSITE_RUN_FROM_PACKAGE"        = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}${data.azurerm_storage_account_blob_container_sas.storage_account_blob_container_token.sas}",
-    "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}",
-    "FUNCTIONS_WORKER_RUNTIME"       = "python",
-    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
+    "WEBSITE_RUN_FROM_PACKAGE"        = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}${data.azurerm_storage_account_blob_container_sas.storage_account_blob_container_token.sas}",
+    "FUNCTIONS_WORKER_RUNTIME"        = "python",
+    "APPINSIGHTS_INSTRUMENTATIONKEY"  = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
   }
 
 
@@ -186,13 +185,13 @@ data "archive_file" "log_pipeline_function" {
   output_path = "log_pipeline_function.zip"
 }
 
-/*
+
 data "azurerm_storage_account_blob_container_sas" "storage_account_blob_container_token" {
   connection_string = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string
   container_name    = azurerm_storage_container.log_pipeline_function_app_storage_container.name
   # start and expirty could probably be locals later
-  start  = timeadd(timestamp(), "-4h")
-  expiry = timeadd(timestamp(), "4h")
+  start  = "2021-11-23T00:00:00Z"
+  expiry = "2022-11-23T00:00:00Z"
 
   permissions {
     read   = true
@@ -203,4 +202,4 @@ data "azurerm_storage_account_blob_container_sas" "storage_account_blob_containe
     list   = false
   }
 }
-*/
+
