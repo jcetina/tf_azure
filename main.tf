@@ -173,7 +173,6 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   os_type = "linux"
   version = "~3"
   site_config {
-    linux_fx_version          = "PYTHON|3.7"
     use_32_bit_worker_process = false
   }
 
