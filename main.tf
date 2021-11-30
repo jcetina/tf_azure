@@ -165,9 +165,9 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     "AzureServiceBusConnectionString" = azurerm_servicebus_namespace.log_pipeline.default_primary_connection_string,
     "AzureWebJobsStorage"             = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string,
     # "WEBSITE_RUN_FROM_PACKAGE"        = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}${data.azurerm_storage_account_blob_container_sas.storage_account_blob_container_token.sas}",
-    "WEBSITE_RUN_FROM_PACKAGE"        = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}",
-    "FUNCTIONS_WORKER_RUNTIME"        = "python",
-    "APPINSIGHTS_INSTRUMENTATIONKEY"  = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
+    "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}",
+    "FUNCTIONS_WORKER_RUNTIME"       = "python",
+    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
   }
 
   identity {
