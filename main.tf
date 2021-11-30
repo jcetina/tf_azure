@@ -186,6 +186,7 @@ resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   role_definition_name = "Storage Blob Data Reader"
   principal_id         = azurerm_function_app.log_pipeline_function_app.identity.0.principal_id
 }
+
 data "archive_file" "log_pipeline_function" {
   type        = "zip"
   source_dir  = "${path.module}/log_pipeline_function"
