@@ -23,7 +23,7 @@ provider "azurerm" {
   features {}
 }
 
-/*
+
 resource "azurerm_resource_group" "log_pipeline" {
   name     = "LogPipelineResourceGroup"
   location = "eastus"
@@ -222,7 +222,7 @@ data "azurerm_storage_account_blob_container_sas" "storage_account_blob_containe
   }
 }
 
-*/
+
 /*
 resource "azurerm_user_assigned_identity" "log_pipeline_function_app_identity" {
   location            = azurerm_resource_group.log_pipeline.location
