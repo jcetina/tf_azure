@@ -133,7 +133,7 @@ resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
   storage_container_name = azurerm_storage_container.log_pipeline_function_app_storage_container.name
   type                   = "Block"
   source                 = data.archive_file.log_pipeline_function.output_path
-  content_md5            = filemd5("log_pipeline_function.zip")
+  content_md5            = filemd5(data.archive_file.log_pipeline_function.output_path)
 }
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
   name                = "LogPipelineFunctionAppServicePlan"
