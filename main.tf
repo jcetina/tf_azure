@@ -182,9 +182,9 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 }
 
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
-  scope = azurerm_resource_group.log_pipeline.id
+  scope                = azurerm_resource_group.log_pipeline.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id = azurerm_function_app.log_pipeline_function_app.identity.principal_id
+  principal_id         = azurerm_function_app.log_pipeline_function_app.identity.principal_id
 }
 data "archive_file" "log_pipeline_function" {
   type        = "zip"
