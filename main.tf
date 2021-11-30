@@ -162,8 +162,6 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   resource_group_name  = azurerm_resource_group.log_pipeline.name
   app_service_plan_id  = azurerm_app_service_plan.log_pipeline_function_app_plan.id
   storage_account_name = azurerm_storage_account.log_pipeline_function_app_storage.name
-  # storage_account_access_key = azurerm_storage_account.log_pipeline_function_app_storage.primary_access_key
-
 
   app_settings = {
     "AzureServiceBusConnectionString" = azurerm_servicebus_namespace.log_pipeline.default_primary_connection_string,
