@@ -192,9 +192,8 @@ resource "azurerm_user_assigned_identity" "log_pipeline_function_app_identity" {
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   scope                = azurerm_resource_group.log_pipeline.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+  principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
-
 
 data "azurerm_function_app" "log_pipeline_function_app_data" {
   name                = azurerm_function_app.log_pipeline_function_app.name
