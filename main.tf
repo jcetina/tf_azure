@@ -128,11 +128,13 @@ resource "azurerm_storage_container" "log_pipeline_function_app_storage_containe
 }
 
 resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
+  # update the name in order to cause the function app to load a different blob on code changes
   name                   = "log_pipeline_function-${filemd5(data.archive_file.log_pipeline_function.output_path)}.zip"
   storage_account_name   = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_container_name = azurerm_storage_container.log_pipeline_function_app_storage_container.name
   type                   = "Block"
   source                 = data.archive_file.log_pipeline_function.output_path
+  # content_md5 changes force blob regeneration
   content_md5            = filemd5(data.archive_file.log_pipeline_function.output_path)
 }
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
@@ -160,13 +162,13 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   resource_group_name        = azurerm_resource_group.log_pipeline.name
   app_service_plan_id        = azurerm_app_service_plan.log_pipeline_function_app_plan.id
   storage_account_name       = azurerm_storage_account.log_pipeline_function_app_storage.name
-  storage_account_access_key = azurerm_storage_account.log_pipeline_function_app_storage.primary_access_key
+  # storage_account_access_key = azurerm_storage_account.log_pipeline_function_app_storage.primary_access_key
 
 
   app_settings = {
     "AzureServiceBusConnectionString" = azurerm_servicebus_namespace.log_pipeline.default_primary_connection_string,
     "AzureWebJobsStorage"             = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string,
-    # "WEBSITE_RUN_FROM_PACKAGE"        = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}${data.azurerm_storage_account_blob_container_sas.storage_account_blob_container_token.sas}",
+    # WEBSITE_RUN_FROM_PACKAGE url will update any time the code changes because the blob name includes the md5 of the code zip file
     "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}",
     "FUNCTIONS_WORKER_RUNTIME"       = "python",
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
@@ -181,9 +183,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   site_config {
     use_32_bit_worker_process = false
   }
-
 }
-
 
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   scope                = azurerm_resource_group.log_pipeline.id
@@ -192,6 +192,8 @@ resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
 }
 
 data "azurerm_function_app" "log_pipeline_function_app_data" {
+  # this is a hack so that we can access the function app identity block elsewhere
+  # since the azure terraform provider doesn't compute it when the resource is generated
   name                = azurerm_function_app.log_pipeline_function_app.name
   resource_group_name = azurerm_resource_group.log_pipeline.name
   depends_on = [
@@ -204,31 +206,3 @@ data "archive_file" "log_pipeline_function" {
   source_dir  = "${path.module}/log_pipeline_function"
   output_path = "log_pipeline_function.zip"
 }
-
-
-data "azurerm_storage_account_blob_container_sas" "storage_account_blob_container_token" {
-  connection_string = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string
-  container_name    = azurerm_storage_container.log_pipeline_function_app_storage_container.name
-  # start and expirty could probably be locals later
-  start  = "2021-11-23T00:00:00Z"
-  expiry = "2022-11-23T00:00:00Z"
-
-  permissions {
-    read   = true
-    add    = false
-    create = false
-    write  = false
-    delete = false
-    list   = false
-  }
-}
-
-
-/*
-resource "azurerm_user_assigned_identity" "log_pipeline_function_app_identity" {
-  location            = azurerm_resource_group.log_pipeline.location
-  resource_group_name = azurerm_resource_group.log_pipeline.name
-  name                = "log-pipeline-app"
-}
-
-*/
