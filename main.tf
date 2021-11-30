@@ -170,8 +170,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   }
 
   identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.log_pipeline_function_app_identity.id]
+    type = "SystemAssigned"
   }
 
   os_type = "linux"
@@ -182,16 +181,27 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 
 }
 
+/*
 resource "azurerm_user_assigned_identity" "log_pipeline_function_app_identity" {
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   name                = "log-pipeline-app"
 }
 
+*/
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   scope                = azurerm_resource_group.log_pipeline.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = azurerm_user_assigned_identity.log_pipeline_function_app_identity.principal_id
+  principal_id         = azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+}
+
+
+data "azurerm_function_app" "log_pipeline_function_app_data" {
+  name                = azurerm_function_app.log_pipeline_function_app.name
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  depends_on = [
+    azurerm_function_app.log_pipeline_function_app
+  ]
 }
 
 data "archive_file" "log_pipeline_function" {
