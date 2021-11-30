@@ -169,6 +169,9 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     "APPINSIGHTS_INSTRUMENTATIONKEY"  = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
   }
 
+  identity = {
+    type = "SystemAssigned"
+  }
 
   os_type = "linux"
   version = "~3"
@@ -178,6 +181,11 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 
 }
 
+resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
+  scope = azurerm_resource_group.log_pipeline.id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id = azurerm_function_app.log_pipeline_function_app.identity.principal_id
+}
 data "archive_file" "log_pipeline_function" {
   type        = "zip"
   source_dir  = "${path.module}/log_pipeline_function"
