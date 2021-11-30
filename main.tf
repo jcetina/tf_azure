@@ -23,6 +23,7 @@ provider "azurerm" {
   features {}
 }
 
+/*
 resource "azurerm_resource_group" "log_pipeline" {
   name     = "LogPipelineResourceGroup"
   location = "eastus"
@@ -182,14 +183,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 
 }
 
-/*
-resource "azurerm_user_assigned_identity" "log_pipeline_function_app_identity" {
-  location            = azurerm_resource_group.log_pipeline.location
-  resource_group_name = azurerm_resource_group.log_pipeline.name
-  name                = "log-pipeline-app"
-}
 
-*/
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   scope                = azurerm_resource_group.log_pipeline.id
   role_definition_name = "Storage Blob Data Reader"
@@ -227,3 +221,13 @@ data "azurerm_storage_account_blob_container_sas" "storage_account_blob_containe
     list   = false
   }
 }
+
+*/
+/*
+resource "azurerm_user_assigned_identity" "log_pipeline_function_app_identity" {
+  location            = azurerm_resource_group.log_pipeline.location
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  name                = "log-pipeline-app"
+}
+
+*/
