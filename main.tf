@@ -23,14 +23,10 @@ provider "azurerm" {
   features {}
 }
 
-
-
-resource "azurerm_resource_group" "log_pipeline" {
-  name     = "LogPipelineResourceGroup"
-  location = "eastus"
-
+variable "location" {
+  type    = string
+  default = "eastus"
 }
-
 variable "hec_token" {
   type      = string
   sensitive = true
@@ -40,6 +36,13 @@ variable "vault_name" {
   type    = string
   default = "logpipelinevault"
 }
+
+resource "azurerm_resource_group" "log_pipeline" {
+  name     = "LogPipelineResourceGroup"
+  location = "eastus"
+
+}
+
 resource "azurerm_storage_account" "log_pipeline" {
   name                     = "cooldiagnosticlogs"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
@@ -233,7 +236,7 @@ resource "azurerm_key_vault_access_policy" "key_setter_policy" {
 }
 
 resource "azurerm_key_vault_secret" "hec_token" {
-  name         = "hec_token"
+  name         = "hec-token"
   value        = var.hec_token
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
 }
