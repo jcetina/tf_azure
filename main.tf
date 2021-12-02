@@ -209,6 +209,12 @@ resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
 
+resource "azurerm_role_assignment" "log_pipeline_service_bus_reader" {
+  scope                = azurerm_resource_group.log_pipeline.id
+  role_definition_name = "Azure Service Bus Data Receiver"
+  principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+}
+
 resource "azurerm_key_vault" "log_pipeline_vault" {
   name                = var.vault_name
   location            = azurerm_resource_group.log_pipeline.location
