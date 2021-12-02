@@ -232,6 +232,10 @@ resource "azurerm_key_vault_access_policy" "key_setter_policy" {
 
   secret_permissions = [
     "set",
+    "get",
+    "delete",
+    "purge",
+    "recover"
   ]
 }
 
