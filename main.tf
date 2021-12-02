@@ -25,7 +25,7 @@ provider "azurerm" {
 
 
 resource "azurerm_resource_group" "log_pipeline" {
-  name     = "LogPipelineResourceGroup"
+  name     = "LogPipelineResourceGroup20211202"
   location = "eastus"
 
 }
