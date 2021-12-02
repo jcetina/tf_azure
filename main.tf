@@ -24,29 +24,12 @@ provider "azurerm" {
 }
 
 
-variable "location" {
-  type    = string
-  default = "eastus"
-}
-
-variable "hec_token_name" {
-  type    = string
-  default = "hec-token"
-}
-
-variable "hec_token_value" {
-  type = string
-}
-
-variable "vault_name" {
-  type    = string
-  default = "logpipelinevault"
-}
-
 resource "azurerm_resource_group" "log_pipeline" {
   name     = "LogPipelineResourceGroup"
-  location = var.location
+  location = "eastus"
+
 }
+
 
 resource "azurerm_storage_account" "log_pipeline" {
   name                     = "cooldiagnosticlogs"
@@ -216,47 +199,6 @@ data "azurerm_function_app" "log_pipeline_function_app_data" {
   ]
 }
 
-resource "azurerm_key_vault" "log_pipeline_vault" {
-  name                = var.vault_name
-  location            = azurerm_resource_group.log_pipeline.location
-  resource_group_name = azurerm_resource_group.log_pipeline.name
-  tenant_id           = data.azurerm_client_config.current.tenant_id
-  sku_name            = "premium"
-
-}
-
-resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
-  key_vault_id = azurerm_key_vault.log_pipeline_vault.id
-
-  tenant_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.tenant_id
-  object_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
-
-  secret_permissions = [
-    "get",
-    "list"
-  ]
-}
-
-resource "azurerm_key_vault_access_policy" "key_setter_policy" {
-  key_vault_id = azurerm_key_vault.log_pipeline_vault.id
-
-  tenant_id = data.azurerm_client_config.current.tenant_id
-  object_id = data.azurerm_client_config.current.object_id
-
-  secret_permissions = [
-    "set",
-    "get",
-    "delete",
-    "purge",
-    "recover"
-  ]
-}
-
-resource "azurerm_key_vault_secret" "hec_token" {
-  name         = var.hec_token_name
-  value        = var.hec_token_value
-  key_vault_id = azurerm_key_vault.log_pipeline_vault.id
-}
 data "archive_file" "log_pipeline_function" {
   type        = "zip"
   source_dir  = "${path.module}/log_pipeline_function"
