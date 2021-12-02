@@ -27,7 +27,13 @@ variable "location" {
   type    = string
   default = "eastus"
 }
-variable "hec_token" {
+
+variable "hec_token_name" {
+  type    = string
+  default = "hec-token"
+}
+
+variable "hec_token_value" {
   type      = string
   sensitive = true
 }
@@ -39,9 +45,9 @@ variable "vault_name" {
 
 resource "azurerm_resource_group" "log_pipeline" {
   name     = "LogPipelineResourceGroup"
-  location = "eastus"
-
+  location = var.location
 }
+
 
 resource "azurerm_storage_account" "log_pipeline" {
   name                     = "cooldiagnosticlogs"
@@ -182,8 +188,8 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}",
     "FUNCTIONS_WORKER_RUNTIME"       = "python",
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
-    "HEC_TOKEN_SECRET_ID"            = azurerm_key_vault_secret.hec_token.id,
-    "HEC_VAULT_ID"                   = azurerm_key_vault.log_pipeline_vault.id,
+    "HEC_TOKEN_SECRET_NAME"          = var.hec_token_name,
+    "HEC_VAULT_URI"                  = azurerm_key_vault.log_pipeline_vault.vault_uri,
   }
 
   identity {
@@ -240,8 +246,8 @@ resource "azurerm_key_vault_access_policy" "key_setter_policy" {
 }
 
 resource "azurerm_key_vault_secret" "hec_token" {
-  name         = "hec-token"
-  value        = var.hec_token
+  name         = var.hec_token_name
+  value        = var.hec_token_value
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
 }
 
