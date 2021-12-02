@@ -63,6 +63,7 @@ jobs:
       ARM_TENANT_ID: 53a3b2a4-fb4f-4bea-8637-b567de9faebc
       ARM_CLIENT_ID: b87937ff-6336-4e21-a621-764be6b9020e
       ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
+      TF_VAR_hec_token: ${{ secrets.TF_VAR_HEC_TOKEN }}
 
     # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
     defaults:

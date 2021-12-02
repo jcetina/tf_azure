@@ -24,13 +24,22 @@ provider "azurerm" {
 }
 
 
+
 resource "azurerm_resource_group" "log_pipeline" {
   name     = "LogPipelineResourceGroup"
   location = "eastus"
 
 }
 
+variable "hec_token" {
+  type      = string
+  sensitive = true
+}
 
+variable "vault_name" {
+  type    = string
+  default = "logpipelinevault"
+}
 resource "azurerm_storage_account" "log_pipeline" {
   name                     = "cooldiagnosticlogs"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
@@ -170,6 +179,8 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}",
     "FUNCTIONS_WORKER_RUNTIME"       = "python",
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
+    "HEC_TOKEN_SECRET_ID"            = azurerm_key_vault_secret.hec_token.id,
+    "HEC_VAULT_ID"                   = azurerm_key_vault.log_pipeline_vault.id,
   }
 
   identity {
@@ -189,6 +200,44 @@ resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
 
+resource "azurerm_key_vault" "log_pipeline_vault" {
+  name                = var.vault_name
+  location            = azurerm_resource_group.log_pipeline.location
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "premium"
+
+}
+
+resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
+  key_vault_id = azurerm_key_vault.log_pipeline_vault.id
+
+  tenant_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.tenant_id
+  object_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+
+  secret_permissions = [
+    "get",
+    "list"
+  ]
+}
+
+resource "azurerm_key_vault_access_policy" "key_setter_policy" {
+  key_vault_id = azurerm_key_vault.log_pipeline_vault.id
+
+  tenant_id = data.azurerm_client_config.current.tenant_id
+  object_id = data.azurerm_client_config.current.object_id
+
+  secret_permissions = [
+    "set",
+  ]
+}
+
+resource "azurerm_key_vault_secret" "hec_token" {
+  name         = "hec_token"
+  value        = var.hec_token
+  key_vault_id = azurerm_key_vault.log_pipeline_vault.id
+}
+
 data "azurerm_function_app" "log_pipeline_function_app_data" {
   # this is a hack so that we can access the function app identity block elsewhere
   # since the azure terraform provider doesn't compute it when the resource is generated
@@ -204,3 +253,5 @@ data "archive_file" "log_pipeline_function" {
   source_dir  = "${path.module}/log_pipeline_function"
   output_path = "log_pipeline_function.zip"
 }
+
+data "azurerm_client_config" "current" {}
