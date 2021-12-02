@@ -7,7 +7,6 @@ import azure.functions as func
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 
-
 def main(msg: func.ServiceBusMessage):
     credential = DefaultAzureCredential()
     # secret_client = SecretClient(vault_url="https://my-key-vault.vault.azure.net/", credential=credential)
