@@ -46,6 +46,9 @@ variable "vault_name" {
 resource "azurerm_resource_group" "log_pipeline" {
   name     = "LogPipelineResourceGroup2"
   location = var.location
+  depends_on = [
+    null_resource.python_dependencies
+  ]
 }
 
 resource "azurerm_storage_account" "log_pipeline" {
@@ -271,18 +274,12 @@ data "azurerm_function_app" "log_pipeline_function_app_data" {
   # since the azure terraform provider doesn't compute it when the resource is generated
   name                = azurerm_function_app.log_pipeline_function_app.name
   resource_group_name = azurerm_resource_group.log_pipeline.name
-  depends_on = [
-    azurerm_function_app.log_pipeline_function_app
-  ]
 }
 
 data "archive_file" "log_pipeline_function" {
   type        = "zip"
   source_dir  = "${path.module}/log_pipeline_function"
   output_path = "log_pipeline_function.zip"
-  depends_on = [
-    null_resource.python_dependencies
-  ]
 }
 
 data "azurerm_client_config" "current" {}
