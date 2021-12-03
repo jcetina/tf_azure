@@ -158,11 +158,11 @@ resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
   name                = "LogPipelineFunctionAppServicePlan"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
-  kind                = "FunctionApp"
+  kind                = "Linux"
   reserved            = true
   sku {
-    tier = "Dynamic"
-    size = "Y1"
+    tier = "Standard"
+    size = "S1"
   }
 }
 
