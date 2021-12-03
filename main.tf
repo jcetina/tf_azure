@@ -196,8 +196,9 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     type = "SystemAssigned"
   }
 
-  os_type = "linux"
-  version = "~3"
+  os_type                   = "linux"
+  version                   = "~3"
+  use_32_bit_worker_process = true
 }
 
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
