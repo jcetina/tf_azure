@@ -15,7 +15,10 @@ except Exception as e:
 
 
 def main(msg: func.ServiceBusMessage):
-    logging.info(DefaultAzureCredential)
+    try:
+        logging.info(DefaultAzureCredential)
+    except Exception as e:
+        logging.info("DefaultAzureCredential error: {}".format(str(e)))
     logging.info('msg body: %s',
                 msg.get_body().decode('utf-8'))
     secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
