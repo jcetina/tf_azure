@@ -289,7 +289,7 @@ data "null_data_source" "wait_for_python_deps" {
 data "archive_file" "log_pipeline_function" {
   type        = "zip"
   source_dir  = data.null_data_source.wait_for_python_deps.outputs["source_dir"]
-  output_path = "log_pipeline_function.zip"
+  output_path = "${path.module}/log_pipeline_function.zip"
 }
 
 data "azurerm_client_config" "current" {}
