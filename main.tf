@@ -257,6 +257,12 @@ resource "azurerm_key_vault_secret" "hec_token" {
   ]
 }
 
+resource "null_resource" "python_dependencies" {
+  provisioner "local-exec" {
+    command = "pip install --target=\"${path.module}/log_pipeline_function/.python_packages/lib/site-packages\" -r ${path.module}/log_pipeline_function/requirements.txt"
+  }
+}
+
 data "azurerm_function_app" "log_pipeline_function_app_data" {
   # this is a hack so that we can access the function app identity block elsewhere
   # since the azure terraform provider doesn't compute it when the resource is generated
@@ -271,6 +277,9 @@ data "archive_file" "log_pipeline_function" {
   type        = "zip"
   source_dir  = "${path.module}/log_pipeline_function"
   output_path = "log_pipeline_function.zip"
+  depends_on = [
+    null_resource.python_dependencies
+  ]
 }
 
 data "azurerm_client_config" "current" {}
