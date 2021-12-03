@@ -40,16 +40,16 @@ variable "hec_token_value" {
 
 variable "vault_name" {
   type    = string
-  default = "logpipelinevault2"
+  default = "logpipelinevault3"
 }
 
 resource "azurerm_resource_group" "log_pipeline" {
-  name     = "LogPipelineResourceGroup"
+  name     = "LogPipelineResourceGroup2"
   location = var.location
 }
 
 resource "azurerm_storage_account" "log_pipeline" {
-  name                     = "cooldiagnosticlogs"
+  name                     = "cooldiagnosticlogs2"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -57,7 +57,7 @@ resource "azurerm_storage_account" "log_pipeline" {
 }
 
 resource "azurerm_eventgrid_system_topic" "log_pipeline" {
-  name                   = "CoolDiagnosticLogsSubscriptionTopic"
+  name                   = "CoolDiagnosticLogsSubscriptionTopic2"
   resource_group_name    = azurerm_resource_group.log_pipeline.name
   location               = azurerm_resource_group.log_pipeline.location
   source_arm_resource_id = azurerm_storage_account.log_pipeline.id
@@ -66,7 +66,7 @@ resource "azurerm_eventgrid_system_topic" "log_pipeline" {
 }
 
 resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
-  name                          = "LogPipelineEventSubscription"
+  name                          = "LogPipelineEventSubscription2"
   system_topic                  = azurerm_eventgrid_system_topic.log_pipeline.name
   resource_group_name           = azurerm_resource_group.log_pipeline.name
   service_bus_topic_endpoint_id = azurerm_servicebus_topic.log_pipeline.id
@@ -74,7 +74,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_namespace" "log_pipeline" {
-  name                = "LogPipelineServiceBusNamespace"
+  name                = "LogPipelineServiceBusNamespace2"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   sku                 = "Standard"
@@ -82,7 +82,7 @@ resource "azurerm_servicebus_namespace" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_topic" "log_pipeline" {
-  name                = "LogPipelineServiceBusTopic"
+  name                = "LogPipelineServiceBusTopic2"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -91,7 +91,7 @@ resource "azurerm_servicebus_topic" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_queue" "log_pipeline" {
-  name                = "LogPipelineServiceBusQueue"
+  name                = "LogPipelineServiceBusQueue2"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -100,7 +100,7 @@ resource "azurerm_servicebus_queue" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_queue" "log_pipeline_shadow_queue" {
-  name                = "LogPipelineServiceBusShadowQueue"
+  name                = "LogPipelineServiceBusShadowQueue2"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -108,7 +108,7 @@ resource "azurerm_servicebus_queue" "log_pipeline_shadow_queue" {
 }
 
 resource "azurerm_servicebus_subscription" "log_pipeline" {
-  name                = "LogPipelineServiceBusSubcription"
+  name                = "LogPipelineServiceBusSubcription2"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
   topic_name          = azurerm_servicebus_topic.log_pipeline.name
@@ -119,7 +119,7 @@ resource "azurerm_servicebus_subscription" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
-  name                = "LogPipelineServiceBusShadowSubcription"
+  name                = "LogPipelineServiceBusShadowSubcription2"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
   topic_name          = azurerm_servicebus_topic.log_pipeline.name
@@ -131,7 +131,7 @@ resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
 
 
 resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
-  name                     = "logfunctionappstorage"
+  name                     = "logfunctionappstorage2"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -139,7 +139,7 @@ resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
 }
 
 resource "azurerm_storage_container" "log_pipeline_function_app_storage_container" {
-  name                  = "log-pipeline-app-storage-container"
+  name                  = "log-pipeline-app-storage-container-2"
   storage_account_name  = azurerm_storage_account.log_pipeline_function_app_storage.name
   container_access_type = "private"
 }
@@ -156,7 +156,7 @@ resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
 }
 
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_two" {
-  name                = "LogPipelineFunctionAppServicePlan2"
+  name                = "LogPipelineFunctionAppServicePlan3"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   kind                = "Linux"
@@ -168,14 +168,14 @@ resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_two" {
 }
 
 resource "azurerm_application_insights" "log_pipeline_function_application_insights" {
-  name                = "LogPipelineFunctionApplicationInsights"
+  name                = "LogPipelineFunctionApplicationInsights2"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   application_type    = "other"
 }
 
 resource "azurerm_function_app" "log_pipeline_function_app" {
-  name                       = "LogPipelineFunction"
+  name                       = "LogPipelineFunctionApp2"
   location                   = azurerm_resource_group.log_pipeline.location
   resource_group_name        = azurerm_resource_group.log_pipeline.name
   app_service_plan_id        = azurerm_app_service_plan.log_pipeline_function_app_plan_two.id
