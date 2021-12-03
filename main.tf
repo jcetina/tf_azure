@@ -40,7 +40,7 @@ variable "hec_token_value" {
 
 variable "vault_name" {
   type    = string
-  default = "logpipelinevault"
+  default = "logpipelinevault2"
 }
 
 resource "azurerm_resource_group" "log_pipeline" {
@@ -156,7 +156,7 @@ resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
 }
 
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_two" {
-  name                = "LogPipelineFunctionAppServicePlan"
+  name                = "LogPipelineFunctionAppServicePlan2"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   kind                = "Linux"
@@ -207,7 +207,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 }
 
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
-  scope                = azurerm_resource_group.log_pipeline.id
+  scope                = azurerm_storage_blob.log_pipeline_storage_blob.id
   role_definition_name = "Storage Blob Data Reader"
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
