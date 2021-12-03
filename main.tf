@@ -268,3 +268,5 @@ data "archive_file" "log_pipeline_function" {
   source_dir  = "${path.module}/log_pipeline_function"
   output_path = "log_pipeline_function.zip"
 }
+
+data "azurerm_client_config" "current" {}
