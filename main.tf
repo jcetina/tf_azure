@@ -46,9 +46,6 @@ variable "vault_name" {
 resource "azurerm_resource_group" "log_pipeline" {
   name     = "LogPipelineResourceGroup2"
   location = var.location
-  depends_on = [
-    null_resource.python_dependencies
-  ]
 }
 
 resource "azurerm_storage_account" "log_pipeline" {
@@ -260,6 +257,7 @@ resource "azurerm_key_vault_secret" "hec_token" {
   ]
 }
 
+
 resource "null_resource" "python_dependencies" {
   triggers = {
     build_number = "${timestamp()}"
@@ -276,10 +274,22 @@ data "azurerm_function_app" "log_pipeline_function_app_data" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
 }
 
+data "null_data_source" "wait_for_python_deps" {
+  # https://stackoverflow.com/questions/40744575/how-to-run-command-before-data-archive-file-zips-folder-in-terraform
+  inputs = {
+    # this forces waiting for python dependencies to install
+    python_dependencies_id = null_resource.python_dependencies.id
+
+    # this forces the zip file below to wait on this resource, which waits on the python deps
+    source_dir = "${path.module}/log_pipeline_function"
+  }
+}
+
+
 data "archive_file" "log_pipeline_function" {
   type        = "zip"
   source_dir  = "${path.module}/log_pipeline_function"
-  output_path = "log_pipeline_function.zip"
+  output_path = data.null_data_source.wait_for_python_deps.outputs["source_dir"]
 }
 
 data "azurerm_client_config" "current" {}
