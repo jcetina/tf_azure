@@ -10,10 +10,12 @@ except ImportError as ie:
     logging.info("import error: {}".format(str(ie)))
 except Exception as e:
     logging.info("other error: {}".format(str(e)))
+
 # from azure.keyvault.secrets import SecretClient
 
 
 def main(msg: func.ServiceBusMessage):
+    logging.info(DefaultAzureCredential)
     logging.info('msg body: %s',
                 msg.get_body().decode('utf-8'))
     secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
