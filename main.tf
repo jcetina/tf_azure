@@ -272,7 +272,7 @@ resource "null_resource" "python_dependencies" {
 
 resource "null_resource" "zip_folder" {
   triggers = {
-    build_number = base64sha256(timestamp())
+    python_deps = null_resource.python_dependencies.id
   }
   provisioner "local-exec" {
     command = "zip -r ${path.module}/log_pipeline_function.zip ${local.source_dir}"
@@ -292,7 +292,7 @@ data "azurerm_function_app" "log_pipeline_function_app_data" {
 locals {
   # https://stackoverflow.com/questions/40744575/how-to-run-command-before-data-archive-file-zips-folder-in-terraform
   # this forces waiting for python dependencies to install
-  python_dependencies_id = null_resource.python_dependencies.id
+  zip_folder = null_resource.zip_folder.id
 
   # this forces the zip file below to wait on this resource, which waits on the python deps
   source_dir  = "${path.module}/log_pipeline_function"
