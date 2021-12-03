@@ -153,6 +153,9 @@ resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
   source                 = local.output_path
   # content_md5 changes force blob regeneration
   content_md5 = filemd5(local.output_path)
+  depends_on = [
+    null_resource.zip_folder
+  ]
 }
 
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_two" {
