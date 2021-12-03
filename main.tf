@@ -259,7 +259,7 @@ resource "azurerm_key_vault_secret" "hec_token" {
 
 resource "null_resource" "python_dependencies" {
   provisioner "local-exec" {
-    command = "pip install --target=\"${path.module}/log_pipeline_function/.python_packages/lib/site-packages\" -r ${path.module}/log_pipeline_function/requirements.txt"
+    command = "pip install --target=${path.module}/log_pipeline_function/.python_packages/lib/site-packages -r ${path.module}/log_pipeline_function/requirements.txt"
   }
 }
 
