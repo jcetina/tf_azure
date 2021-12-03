@@ -155,7 +155,7 @@ resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
   content_md5 = filemd5(data.archive_file.log_pipeline_function.output_path)
 }
 
-resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_2" {
+resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_two" {
   name                = "LogPipelineFunctionAppServicePlan"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
