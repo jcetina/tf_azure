@@ -154,7 +154,8 @@ resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
   # content_md5 changes force blob regeneration
   content_md5 = filemd5(data.archive_file.log_pipeline_function.output_path)
 }
-resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
+
+resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_2" {
   name                = "LogPipelineFunctionAppServicePlan"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
@@ -177,7 +178,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   name                       = "LogPipelineFunction"
   location                   = azurerm_resource_group.log_pipeline.location
   resource_group_name        = azurerm_resource_group.log_pipeline.name
-  app_service_plan_id        = azurerm_app_service_plan.log_pipeline_function_app_plan.id
+  app_service_plan_id        = azurerm_app_service_plan.log_pipeline_function_app_plan_2.id
   storage_account_name       = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_account_access_key = azurerm_storage_account.log_pipeline_function_app_storage.primary_access_key
 
