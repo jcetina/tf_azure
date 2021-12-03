@@ -3,12 +3,10 @@ import os
 
 import azure.functions as func
 
-s = """try:
-    from azure.identity import DefaultAzureCredential
-    from azure.keyvault.secrets import SecretClient
-except Exception as e:
-    logging.info(str(e))
-"""
+
+from azure.identity import DefaultAzureCredential
+from azure.keyvault.secrets import SecretClient
+
 
 def main(msg: func.ServiceBusMessage):
     logging.info('msg body: %s',
