@@ -146,13 +146,13 @@ resource "azurerm_storage_container" "log_pipeline_function_app_storage_containe
 
 resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
   # update the name in order to cause the function app to load a different blob on code changes
-  name                   = "log_pipeline_function-${filemd5(data.archive_file.log_pipeline_function.output_path)}.zip"
+  name                   = "log_pipeline_function-${filemd5(local.output_path)}.zip"
   storage_account_name   = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_container_name = azurerm_storage_container.log_pipeline_function_app_storage_container.name
   type                   = "Block"
-  source                 = data.archive_file.log_pipeline_function.output_path
+  source                 = local.output_path
   # content_md5 changes force blob regeneration
-  content_md5 = filemd5(data.archive_file.log_pipeline_function.output_path)
+  content_md5 = filemd5(local.output_path)
 }
 
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_two" {
@@ -267,6 +267,15 @@ resource "null_resource" "python_dependencies" {
   }
 }
 
+resource "null_resource" "zip_folder" {
+  triggers = {
+    python_deps = null_resource.python_dependencies.id
+  }
+  provisioner "local-exec" {
+    command = "zip -r ${path.module}/log_pipeline_function.zip ${local.source_dir}"
+  }
+}
+
 data "azurerm_function_app" "log_pipeline_function_app_data" {
   # this is a hack so that we can access the function app identity block elsewhere
   # since the azure terraform provider doesn't compute it when the resource is generated
@@ -274,22 +283,15 @@ data "azurerm_function_app" "log_pipeline_function_app_data" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
 }
 
-data "null_data_source" "wait_for_python_deps" {
+locals {
   # https://stackoverflow.com/questions/40744575/how-to-run-command-before-data-archive-file-zips-folder-in-terraform
-  inputs = {
-    # this forces waiting for python dependencies to install
-    python_dependencies_id = null_resource.python_dependencies.id
+  # this forces waiting for python dependencies to install
+  python_dependencies_id = null_resource.python_dependencies.id
 
-    # this forces the zip file below to wait on this resource, which waits on the python deps
-    source_dir = "${path.module}/log_pipeline_function"
-  }
-}
-
-
-data "archive_file" "log_pipeline_function" {
-  type        = "zip"
-  source_dir  = data.null_data_source.wait_for_python_deps.outputs["source_dir"]
+  # this forces the zip file below to wait on this resource, which waits on the python deps
+  source_dir  = "${path.module}/log_pipeline_function"
   output_path = "${path.module}/log_pipeline_function.zip"
 }
+
 
 data "azurerm_client_config" "current" {}
