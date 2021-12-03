@@ -5,7 +5,7 @@ import azure.functions as func
 
 
 # from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
+# from azure.keyvault.secrets import SecretClient
 
 
 def main(msg: func.ServiceBusMessage):
