@@ -3,8 +3,13 @@ import os
 
 import azure.functions as func
 
-
-from azure.identity import DefaultAzureCredential
+logging.info('starting')
+try:
+    from azure.identity import DefaultAzureCredential
+except ImportError as ie:
+    logging.info("import error: {}".format(str(ie)))
+except Exception as e:
+    logging.info("other error: {}".format(str(e)))
 # from azure.keyvault.secrets import SecretClient
 
 
