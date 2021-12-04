@@ -146,13 +146,13 @@ resource "azurerm_storage_container" "log_pipeline_function_app_storage_containe
 
 resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
   # update the name in order to cause the function app to load a different blob on code changes
-  name                   = "log_pipeline_function-${filemd5(archive_file.function_zip.output_path)}.zip"
+  name                   = "log_pipeline_function-${filemd5(data.archive_file.function_zip.output_path)}.zip"
   storage_account_name   = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_container_name = azurerm_storage_container.log_pipeline_function_app_storage_container.name
   type                   = "Block"
-  source                 = archive_file.function_zip.output_path
+  source                 = data.archive_file.function_zip.output_path
   # content_md5 changes force blob regeneration
-  content_md5 = filemd5(archive_file.function_zip.output_path)
+  content_md5 = filemd5(data.archive_file.function_zip.output_path)
 }
 
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_two" {
@@ -280,4 +280,5 @@ data "archive_file" "function_zip" {
   output_path = "${base64sha256(null_resource.python_dependencies.id)}-log_pipeline_function.zip"
   type        = zip
 }
+
 data "azurerm_client_config" "current" {}
