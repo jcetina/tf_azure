@@ -276,9 +276,9 @@ data "azurerm_function_app" "log_pipeline_function_app_data" {
 
 
 data "archive_file" "function_zip" {
-  source_dir  = local.source_dir
+  source_dir  = "${path.module}/log_pipeline_function"
   output_path = "${base64sha256(null_resource.python_dependencies.id)}-log_pipeline_function.zip"
-  type        = zip
+  type        = "zip"
 }
 
 data "azurerm_client_config" "current" {}
