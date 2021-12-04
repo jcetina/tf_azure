@@ -12,10 +12,7 @@ def main(msg: func.ServiceBusMessage):
                 msg.get_body().decode('utf-8'))
     secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
     vault = os.environ.get('HEC_VAULT_URI')
-    try:
-        credential = DefaultAzureCredential()
-        secret_client = SecretClient(vault_url=vault, credential=credential)
-        secret = secret_client.get_secret(secret_name)
-        logging.info('{}: {}'.format(secret_name, secret.value))
-    except Exception as e:
-        logging.info(str(e))
+    credential = DefaultAzureCredential()
+    secret_client = SecretClient(vault_url=vault, credential=credential)
+    secret = secret_client.get_secret(secret_name)
+    logging.info('secret name:{}, secret value:{}'.format(secret.name, secret.value))
