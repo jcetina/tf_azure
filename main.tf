@@ -146,16 +146,13 @@ resource "azurerm_storage_container" "log_pipeline_function_app_storage_containe
 
 resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
   # update the name in order to cause the function app to load a different blob on code changes
-  name                   = "log_pipeline_function-${filemd5(local.output_path)}.zip"
+  name                   = "log_pipeline_function-${filemd5(archive_file.function_zip.output_path)}.zip"
   storage_account_name   = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_container_name = azurerm_storage_container.log_pipeline_function_app_storage_container.name
   type                   = "Block"
-  source                 = local.output_path
+  source                 = archive_file.function_zip.output_path
   # content_md5 changes force blob regeneration
-  content_md5 = filemd5(local.output_path)
-  depends_on = [
-    null_resource.zip_folder
-  ]
+  content_md5 = filemd5(archive_file.function_zip.output_path)
 }
 
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_two" {
@@ -263,23 +260,11 @@ resource "azurerm_key_vault_secret" "hec_token" {
 
 resource "null_resource" "python_dependencies" {
   triggers = {
-    build_number = base64sha256(timestamp())
+    build_number = uuid()
   }
   provisioner "local-exec" {
     command = "pip install --target=${path.module}/log_pipeline_function/.python_packages/lib/site-packages -r ${path.module}/log_pipeline_function/requirements.txt"
   }
-}
-
-resource "null_resource" "zip_folder" {
-  triggers = {
-    python_deps = null_resource.python_dependencies.id
-  }
-  provisioner "local-exec" {
-    command = "zip -r ${path.module}/log_pipeline_function.zip ${local.source_dir}"
-  }
-  depends_on = [
-    null_resource.python_dependencies
-  ]
 }
 
 data "azurerm_function_app" "log_pipeline_function_app_data" {
@@ -289,15 +274,10 @@ data "azurerm_function_app" "log_pipeline_function_app_data" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
 }
 
-locals {
-  # https://stackoverflow.com/questions/40744575/how-to-run-command-before-data-archive-file-zips-folder-in-terraform
-  # this forces waiting for python dependencies to install
-  zip_folder = null_resource.zip_folder.id
 
-  # this forces the zip file below to wait on this resource, which waits on the python deps
-  source_dir  = "${path.module}/log_pipeline_function"
-  output_path = "${path.module}/log_pipeline_function.zip"
+data "archive_file" "function_zip" {
+  source_dir  = local.source_dir
+  output_path = "${base64sha256(null_resource.python_dependencies.id)}-log_pipeline_function.zip"
+  type        = zip
 }
-
-
 data "azurerm_client_config" "current" {}
