@@ -6,17 +6,19 @@ import azure.functions as func
 logging.info('starting')
 try:
     from azure.identity import DefaultAzureCredential
+    from azure.keyvault.secrets import SecretClient
 except ImportError as ie:
     logging.info("import error: {}".format(str(ie)))
 except Exception as e:
     logging.info("other error: {}".format(str(e)))
 
-# from azure.keyvault.secrets import SecretClient
+
 
 
 def main(msg: func.ServiceBusMessage):
     try:
         logging.info(DefaultAzureCredential)
+        logging.info(SecretClient)
     except Exception as e:
         logging.info("DefaultAzureCredential error: {}".format(str(e)))
     logging.info('msg body: %s',
