@@ -16,6 +16,6 @@ def main(msg: func.ServiceBusMessage):
         credential = DefaultAzureCredential()
         secret_client = SecretClient(vault_url=vault, credential=credential)
         secret = secret_client.get_secret(secret_name)
-        logging.info('{}: {}'.format(secret_name, secret))
+        logging.info('{}: {}'.format(secret_name, secret.value))
     except Exception as e:
         logging.info(str(e))
