@@ -151,7 +151,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 
   identity {
     type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.log_pipeline_function_runner.principal_id]
+    identity_ids = [azurerm_user_assigned_identity.log_pipeline_function_runner.id]
   }
 
   os_type = "linux"
@@ -193,8 +193,8 @@ resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
 resource "azurerm_key_vault_access_policy" "key_setter_policy" {
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
 
-  tenant_id = azurerm_user_assigned_identity.log_pipeline_function_runner.tenant_id
-  object_id = azurerm_user_assigned_identity.log_pipeline_function_runner.principal_id
+  tenant_id = data.azurerm_client_config.current.tenant_id
+  object_id = data.azurerm_client_config.current.object_id
 
   secret_permissions = [
     "set",
