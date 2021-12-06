@@ -129,7 +129,7 @@ resource "azurerm_application_insights" "log_pipeline_function_application_insig
   resource_group_name = azurerm_resource_group.log_pipeline.name
   application_type    = "other"
 }
-
+/*
 resource "azurerm_function_app" "log_pipeline_function_app" {
   name                       = "${var.prefix}-func"
   location                   = azurerm_resource_group.log_pipeline.location
@@ -163,6 +163,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     use_32_bit_worker_process = false
   }
 }
+*/
 
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   scope                = azurerm_resource_group.log_pipeline.id
