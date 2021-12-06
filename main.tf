@@ -163,7 +163,6 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     use_32_bit_worker_process = false
   }
 }
-*/
 
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   scope                = azurerm_resource_group.log_pipeline.id
