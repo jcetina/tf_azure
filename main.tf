@@ -147,6 +147,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
     "HEC_TOKEN_SECRET_NAME"          = var.hec_token_name,
     "HEC_VAULT_URI"                  = azurerm_key_vault.log_pipeline_vault.vault_uri,
+    "QueueName"                      = azurerm_servicebus_queue.log_pipeline.name,
   }
 
   identity {
