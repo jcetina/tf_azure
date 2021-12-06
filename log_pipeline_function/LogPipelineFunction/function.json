@@ -5,7 +5,7 @@
       "name": "msg",
       "type": "serviceBusTrigger",
       "direction": "in",
-      "queueName": "%QueueName%",
+      "queueName": "QUEUENAME_PLACEHOLDER",
       "connection": "AzureServiceBusConnectionString"
     }
   ]

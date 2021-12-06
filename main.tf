@@ -129,7 +129,7 @@ resource "azurerm_application_insights" "log_pipeline_function_application_insig
   resource_group_name = azurerm_resource_group.log_pipeline.name
   application_type    = "other"
 }
-/*
+
 resource "azurerm_function_app" "log_pipeline_function_app" {
   name                       = "${var.prefix}-func"
   location                   = azurerm_resource_group.log_pipeline.location
@@ -223,6 +223,25 @@ resource "null_resource" "python_dependencies" {
   }
   provisioner "local-exec" {
     command = "pip install --target=${path.module}/log_pipeline_function/.python_packages/lib/site-packages -r ${path.module}/log_pipeline_function/requirements.txt"
+  }
+}
+
+
+resource "null_resource" "python_dependencies" {
+  triggers = {
+    build_number = uuid()
+  }
+  provisioner "local-exec" {
+    command = "pip install --target=${path.module}/log_pipeline_function/.python_packages/lib/site-packages -r ${path.module}/log_pipeline_function/requirements.txt"
+  }
+}
+
+resource "null_resource" "set_queue_name" {
+  triggers = {
+    build_number = uuid()
+  }
+  provisioner "local-exec" {
+    command = "sed -i 's/QUEUENAME_PLACEHOLDER/${azurerm_servicebus_queue.log_pipeline.name}/g' log_pipeline_function/LogPipelineFunction/function.json"
   }
 }
 
