@@ -151,7 +151,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   }
 
   identity {
-    type         = "SystemAssigned"
+    type = "SystemAssigned"
   }
 
   os_type = "linux"
