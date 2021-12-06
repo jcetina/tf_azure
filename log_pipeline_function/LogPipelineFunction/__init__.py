@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 
@@ -8,8 +9,10 @@ from azure.keyvault.secrets import SecretClient
 
 
 def main(msg: func.ServiceBusMessage):
-    logging.info('msg body: %s',
-                msg.get_body().decode('utf-8'))
+    msg_body = msg.get_body().decode('utf-8')
+    msg_dict = json.loads(msg_body)
+    blob_url = msg_dict.get('data', {}).get('url')
+    logging.info('blob url: {}'.format(blob_url))
     secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
     vault = os.environ.get('HEC_VAULT_URI')
     credential = DefaultAzureCredential()
