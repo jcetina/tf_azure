@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "log_pipeline" {
 }
 
 resource "azurerm_storage_account" "log_pipeline" {
-  name                     = "${replace(var.prefix, "[^a-z0-9]", "")}logst"
+  name                     = "${replace(var.prefix, "/[^a-z0-9]/", "")}logst"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -87,7 +87,7 @@ resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
 
 
 resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
-  name                     = "${replace(var.prefix, "[^a-z0-9]", "")}funcst"
+  name                     = "${replace(var.prefix, "/[^a-z0-9]/", "")}funcst"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
