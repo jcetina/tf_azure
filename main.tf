@@ -151,8 +151,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   }
 
   identity {
-    type         = "UserAssigned"
-    identity_ids = [azurerm_user_assigned_identity.log_pipeline_function_runner.id]
+    type         = "SystemAssigned"
   }
 
   os_type = "linux"
@@ -167,7 +166,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   scope                = azurerm_resource_group.log_pipeline.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = azurerm_user_assigned_identity.log_pipeline_function_runner.principal_id
+  principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
 
 resource "azurerm_key_vault" "log_pipeline_vault" {
@@ -182,8 +181,8 @@ resource "azurerm_key_vault" "log_pipeline_vault" {
 resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
 
-  tenant_id = azurerm_user_assigned_identity.log_pipeline_function_runner.tenant_id
-  object_id = azurerm_user_assigned_identity.log_pipeline_function_runner.principal_id
+  tenant_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.tenant_id
+  object_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 
   secret_permissions = [
     "get",
@@ -234,9 +233,3 @@ resource "null_resource" "set_queue_name" {
   }
 }
 
-resource "azurerm_user_assigned_identity" "log_pipeline_function_runner" {
-  resource_group_name = azurerm_resource_group.log_pipeline.name
-  location            = azurerm_resource_group.log_pipeline.location
-
-  name = "${var.prefix}-func-id"
-}
