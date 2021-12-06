@@ -165,11 +165,13 @@ resource "azurerm_application_insights" "log_pipeline_function_application_insig
 }
 */
 
+/*
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   scope                = azurerm_resource_group.log_pipeline.id
   role_definition_name = "Storage Blob Data Reader"
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
+*/
 
 resource "azurerm_key_vault" "log_pipeline_vault" {
   name                = "${var.prefix}-kv"
@@ -180,6 +182,7 @@ resource "azurerm_key_vault" "log_pipeline_vault" {
 
 }
 
+/*
 resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
 
@@ -191,6 +194,7 @@ resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
     "list"
   ]
 }
+*/
 
 resource "azurerm_key_vault_access_policy" "key_setter_policy" {
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
