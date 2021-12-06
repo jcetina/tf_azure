@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "log_pipeline" {
 }
 
 resource "azurerm_storage_account" "log_pipeline" {
-  name                     = "${var.prefix}-logs-st"
+  name                     = "${var.prefix}logst"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -22,7 +22,7 @@ resource "azurerm_eventgrid_system_topic" "log_pipeline" {
 }
 
 resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
-  name                          = "${var.prefix}-evgs"
+  name                          = "${replace(var.prefix, "[^a-z0-9]", "")}-evgs"
   system_topic                  = azurerm_eventgrid_system_topic.log_pipeline.name
   resource_group_name           = azurerm_resource_group.log_pipeline.name
   service_bus_topic_endpoint_id = azurerm_servicebus_topic.log_pipeline.id
@@ -30,7 +30,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_namespace" "log_pipeline" {
-  name                = "${var.prefix}-sb"
+  name                = "${var.prefix}-sbn"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   sku                 = "Standard"
@@ -87,7 +87,7 @@ resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
 
 
 resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
-  name                     = "${var.prefix}-func-st"
+  name                     = "${replace(var.prefix, "[^a-z0-9]", "")}-func-st"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
