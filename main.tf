@@ -226,7 +226,7 @@ resource "null_resource" "python_dependencies" {
 }
 
 
-resource "null_resource" "python_dependencies" {
+resource "null_resource" "set_queue_name" {
   triggers = {
     build_number = uuid()
   }
