@@ -1,28 +1,3 @@
-# Configure the Azure provider
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 2.65"
-    }
-  }
-  required_version = ">= 0.14.9"
-
-
-  backend "remote" {
-    organization = "cetinas-dot-org"
-
-    workspaces {
-      name = "tf_azure"
-    }
-  }
-
-}
-
-provider "azurerm" {
-  features {}
-}
-
 
 resource "azurerm_resource_group" "log_pipeline" {
   name     = "${prefix}-rg"
@@ -175,8 +150,8 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   }
 
   identity {
-    type = "UserAssigned"
-    identity_ids = [ azurerm_user_assigned_identity.log_pipeline_function_runner.principal_id ]
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.log_pipeline_function_runner.principal_id]
   }
 
   os_type = "linux"
@@ -255,12 +230,3 @@ resource "azurerm_user_assigned_identity" "log_pipeline_function_runner" {
 
   name = "${prefix}-func-id"
 }
-
-
-data "archive_file" "function_zip" {
-  source_dir  = "${path.module}/log_pipeline_function"
-  output_path = "${base64sha256(null_resource.python_dependencies.id)}-log_pipeline_function.zip"
-  type        = "zip"
-}
-
-data "azurerm_client_config" "current" {}
