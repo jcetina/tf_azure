@@ -23,33 +23,14 @@ provider "azurerm" {
   features {}
 }
 
-variable "location" {
-  type    = string
-  default = "eastus"
-}
-
-variable "hec_token_name" {
-  type    = string
-  default = "hec-token"
-}
-
-variable "hec_token_value" {
-  type      = string
-  sensitive = true
-}
-
-variable "vault_name" {
-  type    = string
-  default = "logpipelinevault3"
-}
 
 resource "azurerm_resource_group" "log_pipeline" {
-  name     = "LogPipelineResourceGroup2"
+  name     = "${prefix}-rg"
   location = var.location
 }
 
 resource "azurerm_storage_account" "log_pipeline" {
-  name                     = "cooldiagnosticlogs2"
+  name                     = "${prefix}-logs-st"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -57,7 +38,7 @@ resource "azurerm_storage_account" "log_pipeline" {
 }
 
 resource "azurerm_eventgrid_system_topic" "log_pipeline" {
-  name                   = "CoolDiagnosticLogsSubscriptionTopic2"
+  name                   = "${prefix}-evgt"
   resource_group_name    = azurerm_resource_group.log_pipeline.name
   location               = azurerm_resource_group.log_pipeline.location
   source_arm_resource_id = azurerm_storage_account.log_pipeline.id
@@ -66,7 +47,7 @@ resource "azurerm_eventgrid_system_topic" "log_pipeline" {
 }
 
 resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
-  name                          = "LogPipelineEventSubscription2"
+  name                          = "${prefix}-evgs"
   system_topic                  = azurerm_eventgrid_system_topic.log_pipeline.name
   resource_group_name           = azurerm_resource_group.log_pipeline.name
   service_bus_topic_endpoint_id = azurerm_servicebus_topic.log_pipeline.id
@@ -74,7 +55,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_namespace" "log_pipeline" {
-  name                = "LogPipelineServiceBusNamespace2"
+  name                = "${prefix}-sb"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   sku                 = "Standard"
@@ -82,7 +63,7 @@ resource "azurerm_servicebus_namespace" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_topic" "log_pipeline" {
-  name                = "LogPipelineServiceBusTopic2"
+  name                = "${prefix}-sbt"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -91,7 +72,7 @@ resource "azurerm_servicebus_topic" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_queue" "log_pipeline" {
-  name                = "LogPipelineServiceBusQueue2"
+  name                = "${prefix}-sbq"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -100,7 +81,7 @@ resource "azurerm_servicebus_queue" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_queue" "log_pipeline_shadow_queue" {
-  name                = "LogPipelineServiceBusShadowQueue2"
+  name                = "${prefix}-shadow-sbq"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -108,7 +89,7 @@ resource "azurerm_servicebus_queue" "log_pipeline_shadow_queue" {
 }
 
 resource "azurerm_servicebus_subscription" "log_pipeline" {
-  name                = "LogPipelineServiceBusSubcription2"
+  name                = "${prefix}-sbs"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
   topic_name          = azurerm_servicebus_topic.log_pipeline.name
@@ -119,7 +100,7 @@ resource "azurerm_servicebus_subscription" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
-  name                = "LogPipelineServiceBusShadowSubcription2"
+  name                = "${prefix}-shadow-sbs"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
   topic_name          = azurerm_servicebus_topic.log_pipeline.name
@@ -131,7 +112,7 @@ resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
 
 
 resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
-  name                     = "logfunctionappstorage2"
+  name                     = "${prefix}-func-st"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -139,14 +120,14 @@ resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
 }
 
 resource "azurerm_storage_container" "log_pipeline_function_app_storage_container" {
-  name                  = "log-pipeline-app-storage-container-2"
+  name                  = "${prefix}-func-st-container"
   storage_account_name  = azurerm_storage_account.log_pipeline_function_app_storage.name
   container_access_type = "private"
 }
 
 resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
   # update the name in order to cause the function app to load a different blob on code changes
-  name                   = "log_pipeline_function-${filemd5(data.archive_file.function_zip.output_path)}.zip"
+  name                   = "${prefix}-func-code-${filemd5(data.archive_file.function_zip.output_path)}.zip"
   storage_account_name   = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_container_name = azurerm_storage_container.log_pipeline_function_app_storage_container.name
   type                   = "Block"
@@ -155,8 +136,8 @@ resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
   content_md5 = filemd5(data.archive_file.function_zip.output_path)
 }
 
-resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_two" {
-  name                = "LogPipelineFunctionAppServicePlan3"
+resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
+  name                = "${prefix}-plan"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   kind                = "Linux"
@@ -168,17 +149,17 @@ resource "azurerm_app_service_plan" "log_pipeline_function_app_plan_two" {
 }
 
 resource "azurerm_application_insights" "log_pipeline_function_application_insights" {
-  name                = "LogPipelineFunctionApplicationInsights2"
+  name                = "${prefix}-appi"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   application_type    = "other"
 }
 
 resource "azurerm_function_app" "log_pipeline_function_app" {
-  name                       = "LogPipelineFunctionApp2"
+  name                       = "${prefix}-func"
   location                   = azurerm_resource_group.log_pipeline.location
   resource_group_name        = azurerm_resource_group.log_pipeline.name
-  app_service_plan_id        = azurerm_app_service_plan.log_pipeline_function_app_plan_two.id
+  app_service_plan_id        = azurerm_app_service_plan.log_pipeline_function_app_plan.id
   storage_account_name       = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_account_access_key = azurerm_storage_account.log_pipeline_function_app_storage.primary_access_key
 
@@ -194,7 +175,8 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   }
 
   identity {
-    type = "SystemAssigned"
+    type = "UserAssigned"
+    identity_ids = [ azurerm_user_assigned_identity.log_pipeline_function_runner.principal_id ]
   }
 
   os_type = "linux"
@@ -209,11 +191,11 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   scope                = azurerm_resource_group.log_pipeline.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+  principal_id         = azurerm_user_assigned_identity.log_pipeline_function_runner.principal_id
 }
 
 resource "azurerm_key_vault" "log_pipeline_vault" {
-  name                = var.vault_name
+  name                = "${prefix}-kv"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
@@ -224,8 +206,8 @@ resource "azurerm_key_vault" "log_pipeline_vault" {
 resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
 
-  tenant_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.tenant_id
-  object_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+  tenant_id = azurerm_user_assigned_identity.log_pipeline_function_runner.tenant_id
+  object_id = azurerm_user_assigned_identity.log_pipeline_function_runner.principal_id
 
   secret_permissions = [
     "get",
@@ -236,8 +218,8 @@ resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
 resource "azurerm_key_vault_access_policy" "key_setter_policy" {
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
 
-  tenant_id = data.azurerm_client_config.current.tenant_id
-  object_id = data.azurerm_client_config.current.object_id
+  tenant_id = azurerm_user_assigned_identity.log_pipeline_function_runner.tenant_id
+  object_id = azurerm_user_assigned_identity.log_pipeline_function_runner.principal_id
 
   secret_permissions = [
     "set",
@@ -267,11 +249,11 @@ resource "null_resource" "python_dependencies" {
   }
 }
 
-data "azurerm_function_app" "log_pipeline_function_app_data" {
-  # this is a hack so that we can access the function app identity block elsewhere
-  # since the azure terraform provider doesn't compute it when the resource is generated
-  name                = azurerm_function_app.log_pipeline_function_app.name
+resource "azurerm_user_assigned_identity" "log_pipeline_function_runner" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
+  location            = azurerm_resource_group.log_pipeline.location
+
+  name = "${prefix}-func-id"
 }
 
 
