@@ -1,11 +1,11 @@
 
 resource "azurerm_resource_group" "log_pipeline" {
-  name     = "${prefix}-rg"
+  name     = "${var.prefix}-rg"
   location = var.location
 }
 
 resource "azurerm_storage_account" "log_pipeline" {
-  name                     = "${prefix}-logs-st"
+  name                     = "${var.prefix}-logs-st"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -13,7 +13,7 @@ resource "azurerm_storage_account" "log_pipeline" {
 }
 
 resource "azurerm_eventgrid_system_topic" "log_pipeline" {
-  name                   = "${prefix}-evgt"
+  name                   = "${var.prefix}-evgt"
   resource_group_name    = azurerm_resource_group.log_pipeline.name
   location               = azurerm_resource_group.log_pipeline.location
   source_arm_resource_id = azurerm_storage_account.log_pipeline.id
@@ -22,7 +22,7 @@ resource "azurerm_eventgrid_system_topic" "log_pipeline" {
 }
 
 resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
-  name                          = "${prefix}-evgs"
+  name                          = "${var.prefix}-evgs"
   system_topic                  = azurerm_eventgrid_system_topic.log_pipeline.name
   resource_group_name           = azurerm_resource_group.log_pipeline.name
   service_bus_topic_endpoint_id = azurerm_servicebus_topic.log_pipeline.id
@@ -30,7 +30,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_namespace" "log_pipeline" {
-  name                = "${prefix}-sb"
+  name                = "${var.prefix}-sb"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   sku                 = "Standard"
@@ -38,7 +38,7 @@ resource "azurerm_servicebus_namespace" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_topic" "log_pipeline" {
-  name                = "${prefix}-sbt"
+  name                = "${var.prefix}-sbt"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -47,7 +47,7 @@ resource "azurerm_servicebus_topic" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_queue" "log_pipeline" {
-  name                = "${prefix}-sbq"
+  name                = "${var.prefix}-sbq"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -56,7 +56,7 @@ resource "azurerm_servicebus_queue" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_queue" "log_pipeline_shadow_queue" {
-  name                = "${prefix}-shadow-sbq"
+  name                = "${var.prefix}-shadow-sbq"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -64,7 +64,7 @@ resource "azurerm_servicebus_queue" "log_pipeline_shadow_queue" {
 }
 
 resource "azurerm_servicebus_subscription" "log_pipeline" {
-  name                = "${prefix}-sbs"
+  name                = "${var.prefix}-sbs"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
   topic_name          = azurerm_servicebus_topic.log_pipeline.name
@@ -75,7 +75,7 @@ resource "azurerm_servicebus_subscription" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
-  name                = "${prefix}-shadow-sbs"
+  name                = "${var.prefix}-shadow-sbs"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
   topic_name          = azurerm_servicebus_topic.log_pipeline.name
@@ -87,7 +87,7 @@ resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
 
 
 resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
-  name                     = "${prefix}-func-st"
+  name                     = "${var.prefix}-func-st"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -95,14 +95,14 @@ resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
 }
 
 resource "azurerm_storage_container" "log_pipeline_function_app_storage_container" {
-  name                  = "${prefix}-func-st-container"
+  name                  = "${var.prefix}-func-st-container"
   storage_account_name  = azurerm_storage_account.log_pipeline_function_app_storage.name
   container_access_type = "private"
 }
 
 resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
   # update the name in order to cause the function app to load a different blob on code changes
-  name                   = "${prefix}-func-code-${filemd5(data.archive_file.function_zip.output_path)}.zip"
+  name                   = "${var.prefix}-func-code-${filemd5(data.archive_file.function_zip.output_path)}.zip"
   storage_account_name   = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_container_name = azurerm_storage_container.log_pipeline_function_app_storage_container.name
   type                   = "Block"
@@ -112,7 +112,7 @@ resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
 }
 
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
-  name                = "${prefix}-plan"
+  name                = "${var.prefix}-plan"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   kind                = "Linux"
@@ -124,14 +124,14 @@ resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
 }
 
 resource "azurerm_application_insights" "log_pipeline_function_application_insights" {
-  name                = "${prefix}-appi"
+  name                = "${var.prefix}-appi"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   application_type    = "other"
 }
 
 resource "azurerm_function_app" "log_pipeline_function_app" {
-  name                       = "${prefix}-func"
+  name                       = "${var.prefix}-func"
   location                   = azurerm_resource_group.log_pipeline.location
   resource_group_name        = azurerm_resource_group.log_pipeline.name
   app_service_plan_id        = azurerm_app_service_plan.log_pipeline_function_app_plan.id
@@ -170,7 +170,7 @@ resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
 }
 
 resource "azurerm_key_vault" "log_pipeline_vault" {
-  name                = "${prefix}-kv"
+  name                = "${var.prefix}-kv"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
@@ -228,5 +228,5 @@ resource "azurerm_user_assigned_identity" "log_pipeline_function_runner" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
   location            = azurerm_resource_group.log_pipeline.location
 
-  name = "${prefix}-func-id"
+  name = "${var.prefix}-func-id"
 }
