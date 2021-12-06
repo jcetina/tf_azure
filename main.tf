@@ -225,22 +225,12 @@ resource "null_resource" "python_dependencies" {
   }
 }
 
-
 resource "null_resource" "set_queue_name" {
   triggers = {
     build_number = uuid()
   }
   provisioner "local-exec" {
-    command = "pip install --target=${path.module}/log_pipeline_function/.python_packages/lib/site-packages -r ${path.module}/log_pipeline_function/requirements.txt"
-  }
-}
-
-resource "null_resource" "set_queue_name" {
-  triggers = {
-    build_number = uuid()
-  }
-  provisioner "local-exec" {
-    command = "sed -i 's/QUEUENAME_PLACEHOLDER/${azurerm_servicebus_queue.log_pipeline.name}/g' log_pipeline_function/LogPipelineFunction/function.json"
+    command = "sed -i 's/QUEUENAME_PLACEHOLDER/${azurerm_servicebus_queue.log_pipeline.name}/g' ${path.module}/log_pipeline_function/LogPipelineFunction/function.json"
   }
 }
 
