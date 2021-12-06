@@ -130,13 +130,14 @@ resource "azurerm_application_insights" "log_pipeline_function_application_insig
   application_type    = "other"
 }
 
-resource "azurerm_function_app" "log_pipeline_function_app" {
+/*resource "azurerm_function_app" "log_pipeline_function_app" {
   name                       = "${var.prefix}-func"
   location                   = azurerm_resource_group.log_pipeline.location
   resource_group_name        = azurerm_resource_group.log_pipeline.name
   app_service_plan_id        = azurerm_app_service_plan.log_pipeline_function_app_plan.id
   storage_account_name       = azurerm_storage_account.log_pipeline_function_app_storage.name
   storage_account_access_key = azurerm_storage_account.log_pipeline_function_app_storage.primary_access_key
+  enable_builtin_logging = false
 
   app_settings = {
     "AzureServiceBusConnectionString" = azurerm_servicebus_namespace.log_pipeline.default_primary_connection_string,
@@ -162,6 +163,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     use_32_bit_worker_process = false
   }
 }
+*/
 
 resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
   scope                = azurerm_resource_group.log_pipeline.id
