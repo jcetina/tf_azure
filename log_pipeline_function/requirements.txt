@@ -4,3 +4,5 @@ azure-functions
 azure-keyvault-secrets
 azure-identity
 azure-storage-blob
+opencensus
+opencensus-ext-azure
