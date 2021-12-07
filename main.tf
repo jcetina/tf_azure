@@ -5,7 +5,7 @@ resource "azurerm_resource_group" "log_pipeline" {
 }
 
 resource "azurerm_storage_account" "log_pipeline" {
-  name                     = "${replace(format("%s%s", var.prefix, random_string.log_storage_account), "/[^a-z0-9]/", "")}logst"
+  name                     = "${replace(format("%s%s", var.prefix, random_string.log_storage_account.result), "/[^a-z0-9]/", "")}logst"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -87,7 +87,7 @@ resource "azurerm_servicebus_subscription" "log_pipeline_shadow_subscription" {
 
 
 resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
-  name                     = "${replace(format("%s%s", var.prefix, random_string.func_storage_account), "/[^a-z0-9]/", "")}logst"
+  name                     = "${replace(format("%s%s", var.prefix, random_string.func_storage_account.result), "/[^a-z0-9]/", "")}funcst"
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -236,13 +236,13 @@ resource "null_resource" "set_queue_name" {
 }
 
 resource "random_string" "log_storage_account" {
-  length  = 16
+  length  = 8
   upper   = false
   special = false
 }
 
 resource "random_string" "func_storage_account" {
-  length  = 16
+  length  = 8
   upper   = false
   special = false
 }
