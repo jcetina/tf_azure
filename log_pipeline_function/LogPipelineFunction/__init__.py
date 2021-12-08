@@ -45,7 +45,10 @@ def main(msg: func.ServiceBusMessage):
         LINES_VIEW = view_module.View('lines_view', "number of lines", [], LINES_MEASURE, aggregation_module.CountAggregation())
         BYTES_VIEW = view_module.View('bytes_view', "number of lines", [], BYTES_MEASURE, aggregation_module.CountAggregation())
 
-        exporter = metrics_exporter.new_metrics_exporter(connection_string=os.environ['APPINSIGHTS_INSTRUMENTATIONKEY'])
+        connection_string = 'InstrumentationKey={}'.format(os.environ['APPINSIGHTS_INSTRUMENTATIONKEY'])
+        exporter = metrics_exporter.new_metrics_exporter(
+            connection_string=connection_string
+        )
         view_manager.register_exporter(exporter)
         view_manager.register_view(LINES_VIEW)
         view_manager.register_view(BYTES_VIEW)
