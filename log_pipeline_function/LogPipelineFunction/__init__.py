@@ -3,6 +3,7 @@ import logging
 import os
 
 import azure.functions as func
+import requests
 
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
@@ -27,11 +28,18 @@ def main(msg: func.ServiceBusMessage):
     blob_client = BlobClient.from_blob_url(blob_url, credential=credential)
     blob_data = blob_client.download_blob().readall()
     logging.info('blob data: {}'.format(blob_data))
-    secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
+    hec_secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
     vault = os.environ.get('HEC_VAULT_URI')
     secret_client = SecretClient(vault_url=vault, credential=credential)
-    secret = secret_client.get_secret(secret_name)
-    logging.info('secret name:{}, secret value:{}'.format(secret.name, secret.value))
+    hec_secret = secret_client.get_secret(hec_secret_name)
+    logging.info('secret name:{}, secret value:{}'.format(hec_secret.name, 'redacted'))
+
+    hec_event_string = ''
+    for line in blob_data.decode('utf-8').splitlines():
+        event = {'event': json.loads(line)}
+        hec_event_string += json.dumps(event)
+    
+    logging.info(hec_event_string)
 
     # opencensus foo
     try:
@@ -59,5 +67,12 @@ def main(msg: func.ServiceBusMessage):
         mmap.measure_int_put(BYTES_MEASURE, len(blob_data))
         mmap.record(tmap)
         logging.info('lines: {}, bytes: {}'.format(len(blob_data.decode('utf-8').splitlines()), len(blob_data)))
+
+        url='https://splunk.mattuebel.com/services/collector/raw?channel=49b42560-9fde-40f6-8c9b-32e0d81be1e2&sourcetype=test'
+        authHeader = {'Authorization': 'Splunk {}'.format(hec_secret.value)}
+
+        r = requests.post(url, headers=authHeader, data=hec_event_string.encode('utf-8'), verify=False)
+        logging.info('response: {}'.format(r.text))
+
     except Exception as e:
         logging.info('error: {}'.format(str(e)))
