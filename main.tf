@@ -24,7 +24,7 @@ resource "azurerm_eventgrid_system_topic" "log_pipeline" {
 resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
   name                          = "${var.prefix}-evgs"
   system_topic                  = azurerm_eventgrid_system_topic.log_pipeline.name
-  resource_group_name           = azurerm_resource_group.log_pipeline.name
+  resource_group_name           = data.azurerm_storage_account.log_source.resource_group_name
   service_bus_topic_endpoint_id = azurerm_servicebus_topic.log_pipeline.id
   included_event_types          = ["Microsoft.Storage.BlobCreated"]
 }
