@@ -16,7 +16,7 @@ resource "azurerm_eventgrid_system_topic" "log_pipeline" {
   name                   = "${var.prefix}-evgt"
   resource_group_name    = azurerm_resource_group.log_pipeline.name
   location               = azurerm_resource_group.log_pipeline.location
-  source_arm_resource_id = data.azurerm_storage_account.log_source_sa.id
+  source_arm_resource_id = data.azurerm_storage_account.log_source.id
   topic_type             = "Microsoft.Storage.StorageAccounts"
 
 }
