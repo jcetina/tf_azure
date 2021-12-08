@@ -42,8 +42,8 @@ def main(msg: func.ServiceBusMessage):
         LINES_MEASURE = measure_module.MeasureInt("line_count", "Number of lines in received file", "1")
         BYTES_MEASURE = measure_module.MeasureInt("byte_count", "Number of bytes in received file", "By")
 
-        LINES_VIEW = view_module.View('lines_view', "number of lines", [], LINES_MEASURE, aggregation_module.CountAggregation())
-        BYTES_VIEW = view_module.View('bytes_view', "number of lines", [], BYTES_MEASURE, aggregation_module.CountAggregation())
+        LINES_VIEW = view_module.View('lines_view', "number of lines", [], LINES_MEASURE, aggregation_module.SumAggregation())
+        BYTES_VIEW = view_module.View('bytes_view', "number of lines", [], BYTES_MEASURE, aggregation_module.SumAggregation())
 
         connection_string = 'InstrumentationKey={}'.format(os.environ['APPINSIGHTS_INSTRUMENTATIONKEY'])
         exporter = metrics_exporter.new_metrics_exporter(
