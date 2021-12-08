@@ -8,6 +8,14 @@ variable "location" {
   default = "eastus"
 }
 
+variable "log_source_rg" {
+  type = string
+}
+
+variable "log_source_sa" {
+  type = string
+}
+
 variable "hec_token_name" {
   type    = string
   default = "hec-token"

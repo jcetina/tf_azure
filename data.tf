@@ -11,4 +11,9 @@ data "azurerm_function_app" "log_pipeline_function_app_data" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
 }
 
+data "azurerm_storage_account" "log_source" {
+  name                = var.log_source_sa
+  resource_group_name = var.log_source_rg
+}
+
 data "azurerm_client_config" "current" {}

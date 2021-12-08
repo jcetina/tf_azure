@@ -16,7 +16,7 @@ resource "azurerm_eventgrid_system_topic" "log_pipeline" {
   name                   = "${var.prefix}-evgt"
   resource_group_name    = azurerm_resource_group.log_pipeline.name
   location               = azurerm_resource_group.log_pipeline.location
-  source_arm_resource_id = azurerm_storage_account.log_pipeline.id
+  source_arm_resource_id = data.azurerm_storage_account.log_source_sa.id
   topic_type             = "Microsoft.Storage.StorageAccounts"
 
 }
@@ -166,8 +166,14 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   }
 }
 
-resource "azurerm_role_assignment" "log_pipeline_blob_reader" {
-  scope                = azurerm_resource_group.log_pipeline.id
+resource "azurerm_role_assignment" "func_reader" {
+  scope                = azurerm_storage_container.log_pipeline_function_app_storage_container.id
+  role_definition_name = "Storage Blob Data Reader"
+  principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+}
+
+resource "azurerm_role_assignment" "log_reader" {
+  scope                = data.azurerm_storage_account.log_source.id
   role_definition_name = "Storage Blob Data Reader"
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
