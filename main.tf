@@ -154,12 +154,15 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     type = "SystemAssigned"
   }
 
+  
+
   os_type = "linux"
   version = "~3"
 
   site_config {
     linux_fx_version          = "PYTHON|3.8"
     use_32_bit_worker_process = false
+    always_on = false
   }
 }
 

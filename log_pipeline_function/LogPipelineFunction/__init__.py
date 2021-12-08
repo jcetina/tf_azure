@@ -43,7 +43,7 @@ def main(msg: func.ServiceBusMessage):
         BYTES_MEASURE = measure_module.MeasureInt("byte_count", "Number of bytes in received file", "By")
 
         LINES_VIEW = view_module.View('lines_view', "number of lines", [], LINES_MEASURE, aggregation_module.SumAggregation())
-        BYTES_VIEW = view_module.View('bytes_view', "number of lines", [], BYTES_MEASURE, aggregation_module.SumAggregation())
+        BYTES_VIEW = view_module.View('bytes_view', "number of bytes", [], BYTES_MEASURE, aggregation_module.SumAggregation())
 
         connection_string = 'InstrumentationKey={}'.format(os.environ['APPINSIGHTS_INSTRUMENTATIONKEY'])
         exporter = metrics_exporter.new_metrics_exporter(
@@ -58,5 +58,6 @@ def main(msg: func.ServiceBusMessage):
         mmap.measure_int_put(LINES_MEASURE, len(blob_data.decode('utf-8').splitlines()))
         mmap.measure_int_put(BYTES_MEASURE, len(blob_data))
         mmap.record(tmap)
+        logging.info('lines: {}, bytes: {}'.format(len(blob_data.decode('utf-8').splitlines()), len(blob_data)))
     except Exception as e:
         logging.info('error: {}'.format(str(e)))
