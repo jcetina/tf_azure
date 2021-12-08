@@ -40,7 +40,7 @@ def main(msg: func.ServiceBusMessage):
         stats_recorder = stats.stats_recorder
         
         LINES_MEASURE = measure_module.MeasureInt("line_count", "Number of lines in received file", "1")
-        BYTES_MEASURE = measure_module.MeasureInt("line_count", "Number of bytes in received file", "By")
+        BYTES_MEASURE = measure_module.MeasureInt("byte_count", "Number of bytes in received file", "By")
 
         LINES_VIEW = view_module.View('lines_view', "number of lines", [], LINES_MEASURE, aggregation_module.CountAggregation())
         BYTES_VIEW = view_module.View('bytes_view', "number of lines", [], BYTES_MEASURE, aggregation_module.CountAggregation())
