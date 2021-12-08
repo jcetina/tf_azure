@@ -36,7 +36,7 @@ def main(msg: func.ServiceBusMessage):
 
     hec_event_string = ''
     for line in blob_data.decode('utf-8').splitlines():
-        event = {'event': json.loads(line)}
+        event = json.loads(line)
         hec_event_string += json.dumps(event)
     
     logging.info(hec_event_string)
