@@ -100,7 +100,7 @@ resource "azurerm_storage_container" "log_pipeline_function_app_storage_containe
   container_access_type = "private"
 }
 
-resource "azurerm_storage_blob" "log_pipeline_storage_blob" {
+resource "azurerm_storage_blob" "func_app_storage_blob" {
   # update the name in order to cause the function app to load a different blob on code changes
   name                   = "${var.prefix}-func-code-${filemd5(data.archive_file.function_zip.output_path)}.zip"
   storage_account_name   = azurerm_storage_account.log_pipeline_function_app_storage.name
@@ -143,7 +143,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     "AzureServiceBusConnectionString" = azurerm_servicebus_namespace.log_pipeline.default_primary_connection_string,
     "AzureWebJobsStorage"             = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string,
     # WEBSITE_RUN_FROM_PACKAGE url will update any time the code changes because the blob name includes the md5 of the code zip file
-    "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.log_pipeline_storage_blob.name}",
+    "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.log_pipeline_function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.log_pipeline_function_app_storage_container.name}/${azurerm_storage_blob.func_app_storage_blob.name}",
     "FUNCTIONS_WORKER_RUNTIME"       = "python",
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
     "HEC_TOKEN_SECRET_NAME"          = var.hec_token_name,
@@ -230,7 +230,7 @@ resource "null_resource" "python_dependencies" {
     build_number = uuid()
   }
   provisioner "local-exec" {
-    command = "pip install --target=${path.module}/log_pipeline_function/.python_packages/lib/site-packages -r ${path.module}/log_pipeline_function/requirements.txt"
+    command = "pip install --target=${path.module}/functions/.python_packages/lib/site-packages -r ${path.module}/functions/requirements.txt"
   }
 }
 
@@ -239,7 +239,7 @@ resource "null_resource" "set_queue_name" {
     build_number = uuid()
   }
   provisioner "local-exec" {
-    command = "sed -i 's/QUEUENAME_PLACEHOLDER/${azurerm_servicebus_queue.log_pipeline.name}/g' ${path.module}/log_pipeline_function/LogPipelineFunction/function.json"
+    command = "sed -i 's/QUEUENAME_PLACEHOLDER/${azurerm_servicebus_queue.log_pipeline.name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
   }
 }
 
