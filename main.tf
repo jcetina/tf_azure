@@ -38,7 +38,7 @@ resource "azurerm_servicebus_namespace" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_topic" "topics" {
-  for_each = toset( ["${var.prefix}-event-input-sbt", "${var.prefix}-event-output-sbt" ])
+  for_each            = toset(["${var.prefix}-event-input-sbt", "${var.prefix}-event-output-sbt"])
   name                = each.key
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
@@ -48,7 +48,7 @@ resource "azurerm_servicebus_topic" "topics" {
 }
 
 resource "azurerm_servicebus_queue" "queues" {
-  for_each = toset( ["${var.prefix}-event-input-sbq", "${var.prefix}-event-output-sbq" ])
+  for_each            = toset(["${var.prefix}-event-input-sbq", "${var.prefix}-event-output-sbq"])
   name                = "${var.prefix}-sbq"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
@@ -58,7 +58,7 @@ resource "azurerm_servicebus_queue" "queues" {
 }
 
 resource "azurerm_servicebus_queue" "shadow_queues" {
-  name                = toset( ["${var.prefix}-event-input-shadow-sbq", "${var.prefix}-event-output-shadow-sbq" ])
+  name                = toset(["${var.prefix}-event-input-shadow-sbq", "${var.prefix}-event-output-shadow-sbq"])
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -149,7 +149,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     "FUNCTIONS_WORKER_RUNTIME"       = "python",
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
     "HEC_TOKEN_SECRET_NAME"          = var.hec_token_name,
-    "VAULT_URI"                  = azurerm_key_vault.log_pipeline_vault.vault_uri,
+    "VAULT_URI"                      = azurerm_key_vault.log_pipeline_vault.vault_uri,
   }
 
   identity {
