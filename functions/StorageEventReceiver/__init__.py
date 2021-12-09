@@ -17,7 +17,7 @@ from opencensus.tags import tag_map as tag_map_module
 
 
 
-def main(msg: func.ServiceBusMessage):
+def main(msg: func.ServiceBusMessage, out: func.Out[bytes]):
     
 
     credential = DefaultAzureCredential()
@@ -29,7 +29,7 @@ def main(msg: func.ServiceBusMessage):
     blob_data = blob_client.download_blob().readall()
     logging.info('blob data: {}'.format(blob_data))
     hec_secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
-    vault = os.environ.get('HEC_VAULT_URI')
+    vault = os.environ.get('VAULT_URI')
     secret_client = SecretClient(vault_url=vault, credential=credential)
     hec_secret = secret_client.get_secret(hec_secret_name)
     logging.info('secret name:{}, secret value:{}'.format(hec_secret.name, 'redacted'))
@@ -38,6 +38,7 @@ def main(msg: func.ServiceBusMessage):
     for line in blob_data.decode('utf-8').splitlines():
         event = json.loads(line)
         hec_event_string += json.dumps(event)
+        out.set(line.encode('utf-8'))
     
     logging.info(hec_event_string)
 
