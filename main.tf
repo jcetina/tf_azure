@@ -68,12 +68,12 @@ resource "azurerm_servicebus_queue" "shadow_queues" {
 
 resource "azurerm_servicebus_subscription" "subs" {
   for_each = {
-    local.event_input_topic = {
+    (local.event_input_topic) = {
       name       = "${var.prefix}-event-input-sbs"
       forward_to = local.event_input_queue
     }
 
-    local_event_output_topic = {
+    (local_event_output_topic) = {
       name       = "${var.prefix}-event-output-sbs"
       forward_to = local.event_output_queue
     }
@@ -191,6 +191,18 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   }
 }
 
+resource "azurerm_role_assignment" "permissions" {
+  for_each = {
+    azurerm_storage_account.log_pipeline_function_app_storage.id = "Storage Blob Data Reader"
+    data.azurerm_storage_account.log_source.id                   = "Storage Blob Data Reader"
+    azurerm_servicebus_topic.topics[local.event_output_topic].id = "Azure Service Bus Data Sender"
+  }
+  scope                = each.key
+  role_definition_name = each.value
+  principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+}
+
+/*
 resource "azurerm_role_assignment" "func_reader" {
   scope                = azurerm_storage_account.log_pipeline_function_app_storage.id
   role_definition_name = "Storage Blob Data Reader"
@@ -208,6 +220,7 @@ resource "azurerm_role_assignment" "service_bus_sender" {
   role_definition_name = "Azure Service Bus Data Sender"
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
+*/
 
 resource "azurerm_key_vault" "log_pipeline_vault" {
   name                = "${var.prefix}-kv"
