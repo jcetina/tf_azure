@@ -3,7 +3,6 @@ resource "azurerm_resource_group" "log_pipeline" {
   location = var.location
 }
 
-/*
 resource "azurerm_eventgrid_system_topic" "log_pipeline" {
   name                   = "${var.prefix}-evgt"
   resource_group_name    = data.azurerm_storage_account.log_source.resource_group_name
@@ -20,7 +19,6 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
   service_bus_topic_endpoint_id = azurerm_servicebus_topic.topics[local.event_input_topic].id
   included_event_types          = ["Microsoft.Storage.BlobCreated"]
 }
-*/
 
 resource "azurerm_servicebus_namespace" "log_pipeline" {
   name                = "${var.prefix}-sbn"
