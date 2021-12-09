@@ -25,7 +25,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
   name                          = "${var.prefix}-evgs"
   system_topic                  = azurerm_eventgrid_system_topic.log_pipeline.name
   resource_group_name           = data.azurerm_storage_account.log_source.resource_group_name
-  service_bus_topic_endpoint_id = azurerm_servicebus_topic.topics["${var.prefix}-event-input-sbt"].id
+  service_bus_topic_endpoint_id = azurerm_servicebus_topic.topics[local.event_input_topic].id
   included_event_types          = ["Microsoft.Storage.BlobCreated"]
 }
 
@@ -38,7 +38,7 @@ resource "azurerm_servicebus_namespace" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_topic" "topics" {
-  for_each            = toset(["${var.prefix}-event-input-sbt", "${var.prefix}-event-output-sbt"])
+  for_each            = toset([local.event_input_topic, local.event_output_topic])
   name                = each.key
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
@@ -48,7 +48,7 @@ resource "azurerm_servicebus_topic" "topics" {
 }
 
 resource "azurerm_servicebus_queue" "queues" {
-  for_each            = toset(["${var.prefix}-event-input-sbq", "${var.prefix}-event-output-sbq"])
+  for_each            = toset([local.event_input_queue, local.event_output_queue])
   name                = "${var.prefix}-sbq"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
@@ -58,7 +58,7 @@ resource "azurerm_servicebus_queue" "queues" {
 }
 
 resource "azurerm_servicebus_queue" "shadow_queues" {
-  for_each            = toset(["${var.prefix}-event-input-shadow-sbq", "${var.prefix}-event-output-shadow-sbq"])
+  for_each            = toset([local.event_input_shadow_queue, local.event_output_shadow_queue])
   name                = each.key
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
@@ -67,33 +67,47 @@ resource "azurerm_servicebus_queue" "shadow_queues" {
 }
 
 resource "azurerm_servicebus_subscription" "subs" {
-  foreach = {
-    "${var.prefix}-event-input-sbt"  = "${var.prefix}-event-input-sbq"
-    "${var.prefix}-event-output-sbt" = "${var.prefix}-event-output-sbq"
+  for_each = {
+    local.event_input_topic = {
+      name       = "${var.prefix}-event-input-sbs"
+      forward_to = local.event_input_queue
+    }
+
+    local_event_output_topic = {
+      name       = "${var.prefix}-event-output-sbs"
+      forward_to = local.event_output_queue
+    }
   }
-  name                = "${var.prefix}-event-input-sbs"
+  name                = each.value.name
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
   topic_name          = azurerm_servicebus_topic.topics[each.key].name
 
   max_delivery_count  = 10
   default_message_ttl = "P14D"
-  forward_to          = azurerm_servicebus_queue.queues[each.value].name
+  forward_to          = azurerm_servicebus_queue.queues[each.value.forward_to].name
 }
 
 resource "azurerm_servicebus_subscription" "shadow_subs" {
-  foreach = {
-    "${var.prefix}-event-input-sbt"  = "${var.prefix}-event-input-shadow-sbq"
-    "${var.prefix}-event-output-sbt" = "${var.prefix}-event-output-shadow-sbq"
+  for_each = {
+    local.event_input_topic = {
+      name       = "${var.prefix}-event-input-shadow-sbs"
+      forward_to = local.event_input_queue
+    }
+
+    local_event_output_topic = {
+      name       = "${var.prefix}-event-output-shadow-sbs"
+      forward_to = local.event_output_queue
+    }
   }
-  name                = "${var.prefix}-event-input-shadow-sbs"
+  name                = each.value.name
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
   topic_name          = azurerm_servicebus_topic.topics[each.key].name
 
   max_delivery_count  = 10
   default_message_ttl = "P14D"
-  forward_to          = azurerm_servicebus_queue.queues[each.value].name
+  forward_to          = azurerm_servicebus_queue.queues[each.value.forward_to].name
 }
 
 
@@ -256,7 +270,7 @@ resource "null_resource" "set_input_queue_name" {
     build_number = uuid()
   }
   provisioner "local-exec" {
-    command = "sed -i 's/STORAGE_RECEIVER_INPUT_QUEUE/${azurerm_servicebus_queue.queues["${var.prefix}-event-input-sbq"].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
+    command = "sed -i 's/STORAGE_RECEIVER_INPUT_QUEUE/${azurerm_servicebus_queue.queues[local.event_input_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
   }
 }
 
@@ -265,7 +279,7 @@ resource "null_resource" "set_output_queue_name" {
     build_number = uuid()
   }
   provisioner "local-exec" {
-    command = "sed -i 's/STORAGE_RECEIVER_OUTPUT_QUEUE/${azurerm_servicebus_queue.queues["${var.prefix}-event-output-sbq"].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
+    command = "sed -i 's/STORAGE_RECEIVER_OUTPUT_QUEUE/${azurerm_servicebus_queue.queues[local.event_output_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
   }
 }
 
