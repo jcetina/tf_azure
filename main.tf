@@ -25,7 +25,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
   name                          = "${var.prefix}-evgs"
   system_topic                  = azurerm_eventgrid_system_topic.log_pipeline.name
   resource_group_name           = data.azurerm_storage_account.log_source.resource_group_name
-  service_bus_topic_endpoint_id = azurerm_servicebus_topic.log_pipeline.id
+  service_bus_topic_endpoint_id = azurerm_servicebus_topic.topics["${var.prefix}-event-input-sbt"].id
   included_event_types          = ["Microsoft.Storage.BlobCreated"]
 }
 
@@ -58,33 +58,42 @@ resource "azurerm_servicebus_queue" "queues" {
 }
 
 resource "azurerm_servicebus_queue" "shadow_queues" {
-  name                = toset(["${var.prefix}-event-input-shadow-sbq", "${var.prefix}-event-output-shadow-sbq"])
+  for_each            = toset(["${var.prefix}-event-input-shadow-sbq", "${var.prefix}-event-output-shadow-sbq"])
+  name                = each.key
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
   enable_partitioning = true
 }
 
-resource "azurerm_servicebus_subscription" "event_input" {
+resource "azurerm_servicebus_subscription" "subs" {
+  foreach = {
+    "${var.prefix}-event-input-sbt"  = "${var.prefix}-event-input-sbq"
+    "${var.prefix}-event-output-sbt" = "${var.prefix}-event-output-sbq"
+  }
   name                = "${var.prefix}-event-input-sbs"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
-  topic_name          = azurerm_servicebus_topic.topics["${var.prefix}-event-input-sbt"].name
+  topic_name          = azurerm_servicebus_topic.topics[each.key].name
 
   max_delivery_count  = 10
   default_message_ttl = "P14D"
-  forward_to          = azurerm_servicebus_queue.queues["${var.prefix}-event-input-sbq"].name
+  forward_to          = azurerm_servicebus_queue.queues[each.value].name
 }
 
-resource "azurerm_servicebus_subscription" "event_input_shadow" {
+resource "azurerm_servicebus_subscription" "shadow_subs" {
+  foreach = {
+    "${var.prefix}-event-input-sbt"  = "${var.prefix}-event-input-shadow-sbq"
+    "${var.prefix}-event-output-sbt" = "${var.prefix}-event-output-shadow-sbq"
+  }
   name                = "${var.prefix}-event-input-shadow-sbs"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
-  topic_name          = azurerm_servicebus_topic.topics["${var.prefix}-event-input-shadow-sbt"].name
+  topic_name          = azurerm_servicebus_topic.topics[each.key].name
 
   max_delivery_count  = 10
   default_message_ttl = "P14D"
-  forward_to          = azurerm_servicebus_queue.queues["${var.prefix}-event-input-shadow-sbq"].name
+  forward_to          = azurerm_servicebus_queue.queues[each.value].name
 }
 
 
