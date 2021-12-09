@@ -193,9 +193,9 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 
 resource "azurerm_role_assignment" "permissions" {
   for_each = {
-    azurerm_storage_account.log_pipeline_function_app_storage.id = "Storage Blob Data Reader"
-    (data.azurerm_storage_account.log_source.id)                 = "Storage Blob Data Reader"
-    azurerm_servicebus_topic.topics[local.event_output_topic].id = "Azure Service Bus Data Sender"
+    (azurerm_storage_account.log_pipeline_function_app_storage.id) = "Storage Blob Data Reader"
+    (data.azurerm_storage_account.log_source.id)                   = "Storage Blob Data Reader"
+    (azurerm_servicebus_topic.topics[local.event_output_topic].id) = "Azure Service Bus Data Sender"
   }
   scope                = each.key
   role_definition_name = each.value
