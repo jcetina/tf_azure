@@ -25,3 +25,8 @@ variable "hec_token_value" {
   type      = string
   sensitive = true
 }
+
+variable "func_storage_account_suffix" {
+  type    = string
+  default = "funcst"
+}

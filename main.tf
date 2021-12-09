@@ -1,15 +1,6 @@
-
 resource "azurerm_resource_group" "log_pipeline" {
   name     = "${var.prefix}-rg"
   location = var.location
-}
-
-resource "azurerm_storage_account" "log_pipeline" {
-  name                     = "${replace(format("%s%s", var.prefix, random_string.log_storage_account.result), "/[^a-z0-9]/", "")}logst"
-  resource_group_name      = azurerm_resource_group.log_pipeline.name
-  location                 = azurerm_resource_group.log_pipeline.location
-  account_tier             = "Standard"
-  account_replication_type = "GRS"
 }
 
 resource "azurerm_eventgrid_system_topic" "log_pipeline" {
@@ -49,7 +40,7 @@ resource "azurerm_servicebus_topic" "topics" {
 
 resource "azurerm_servicebus_queue" "queues" {
   for_each            = toset([local.event_input_queue, local.event_output_queue])
-  name                = "${var.prefix}-sbq"
+  name                = each.key
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
@@ -112,7 +103,7 @@ resource "azurerm_servicebus_subscription" "shadow_subs" {
 
 
 resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
-  name                     = "${replace(format("%s%s", var.prefix, random_string.func_storage_account.result), "/[^a-z0-9]/", "")}funcst"
+  name                     = replace(format("%s%s%s", var.prefix, random_string.func_storage_account.result, var.func_storage_account_suffix), "/[^a-z0-9]/", "")
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
@@ -283,14 +274,8 @@ resource "null_resource" "set_output_queue_name" {
   }
 }
 
-resource "random_string" "log_storage_account" {
-  length  = 8
-  upper   = false
-  special = false
-}
-
 resource "random_string" "func_storage_account" {
-  length  = 8
+  length  = 24 - length(replace(format("%s%s", var.prefix, var.func_storage_account_suffix), "/[^a-z0-9]/", ""))
   upper   = false
   special = false
 }

@@ -1,4 +1,4 @@
-prefix = "log-pipeline"
+prefix = "log-pl"
 
 location = "eastus"
 
