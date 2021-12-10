@@ -24,7 +24,7 @@ class File(io.BytesIO):
     def __init__(self):
         self.mode = 'b'
 
-def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
+def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[str]]):
     
     try:
         blob_data = File()
@@ -58,7 +58,7 @@ def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
             for record in records:
                 record_json = json.dumps(record)
                 hec_event_string += '{}\n'.format(record_json)
-                output_records.append(record_json.encode('utf-8'))
+                output_records.append(record_json)
                 line_count += 1
 
         output.set(output_records)
@@ -92,9 +92,11 @@ def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
 
         url='https://splunk.mattuebel.com/services/collector/raw?channel=49b42560-9fde-40f6-8c9b-32e0d81be1e2&sourcetype=test'
         authHeader = {'Authorization': 'Splunk {}'.format(hec_secret.value)}
-
-        r = requests.post(url, headers=authHeader, data=hec_event_string.encode('utf-8'), verify=False)
-        logging.info('response: {}'.format(r.text))
+        if hec_event_string:
+            r = requests.post(url, headers=authHeader, data=hec_event_string.encode('utf-8'), verify=False)
+            logging.info('response: {}'.format(r.text))
+        else:
+            logging.info('no data sent to hec')
 
     except Exception as e:
         logging.info('error: {}'.format(str(e)))
