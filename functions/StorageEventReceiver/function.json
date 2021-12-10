@@ -12,7 +12,7 @@
       "name": "output",
       "type": "serviceBus",
       "direction": "out",
-      "topicName": "STORAGE_RECEIVER_OUTPUT_TOPIC",
+      "queueName": "STORAGE_RECEIVER_OUTPUT_QUEUE",
       "connection": "AzureServiceBusConnectionString"
     }
   ]

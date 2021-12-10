@@ -5,6 +5,7 @@ import os
 
 import azure.functions as func
 import requests
+import typing
 
 from avro.datafile import DataFileReader
 from avro.io import DatumReader
@@ -23,7 +24,7 @@ class File(io.BytesIO):
     def __init__(self):
         self.mode = 'b'
 
-def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
+def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
     
     try:
         blob_data = File()
@@ -45,6 +46,7 @@ def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
         reader = DataFileReader(blob_data, DatumReader())
         hec_event_string = ''
         line_count = 0
+        output_records = []
         for row in reader:
             body = row['Body']
             if body:
@@ -56,6 +58,7 @@ def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
             for record in records:
                 record_json = json.dumps(record)
                 hec_event_string += '{}\n'.format(record_json)
+                output_records.append(record.encode('utf-8'))
                 line_count += 1
     
     

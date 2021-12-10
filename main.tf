@@ -185,7 +185,7 @@ resource "azurerm_role_assignment" "log_reader" {
 }
 
 resource "azurerm_role_assignment" "service_bus_sender" {
-  scope                = azurerm_servicebus_topic.topics[local.event_output_topic].id
+  scope                = azurerm_servicebus_queue.queues[local.event_output_queue].id
   role_definition_name = "Azure Service Bus Data Sender"
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
@@ -254,16 +254,16 @@ resource "null_resource" "set_input_queue_name" {
     command = "sed -i 's/STORAGE_RECEIVER_INPUT_QUEUE/${azurerm_servicebus_queue.queues[local.event_input_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
   }
   depends_on = [
-    null_resource.set_output_topic_name
+    null_resource.set_output_queue_name
   ]
 }
 
-resource "null_resource" "set_output_topic_name" {
+resource "null_resource" "set_output_queue_name" {
   triggers = {
     build_number = uuid()
   }
   provisioner "local-exec" {
-    command = "sed -i 's/STORAGE_RECEIVER_OUTPUT_TOPIC/${azurerm_servicebus_topic.topics[local.event_output_topic].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
+    command = "sed -i 's/STORAGE_RECEIVER_OUTPUT_QUEUE/${azurerm_servicebus_queue.topics[local.event_output_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
   }
 }
 
