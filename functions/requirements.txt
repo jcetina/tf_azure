@@ -6,5 +6,5 @@ azure-identity
 azure-storage-blob
 opencensus
 opencensus-ext-azure
-avro
+# avro
 typing

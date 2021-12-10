@@ -124,7 +124,7 @@ resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
   reserved            = true
   sku {
     tier = "Standard"
-    size = "S1"
+    size = "S3"
   }
 }
 
