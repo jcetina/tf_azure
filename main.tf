@@ -263,7 +263,7 @@ resource "null_resource" "set_output_queue_name" {
     build_number = uuid()
   }
   provisioner "local-exec" {
-    command = "sed -i 's/STORAGE_RECEIVER_OUTPUT_QUEUE/${azurerm_servicebus_queue.queue[local.event_output_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
+    command = "sed -i 's/STORAGE_RECEIVER_OUTPUT_QUEUE/${azurerm_servicebus_queue.queues[local.event_output_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
   }
 }
 
