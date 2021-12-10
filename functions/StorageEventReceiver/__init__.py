@@ -50,8 +50,9 @@ def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
         hec_event_string += '{}\n'.format(line)
         queue_output.append(line.encode('utf-8'))
         line_count += 1
+        output.set(line.encode('utf-8')
     
-    output.set(queue_output)
+    
 
     # opencensus foo
     try:
