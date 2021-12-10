@@ -13,7 +13,7 @@
       "type": "queue",
       "direction": "out",
       "queueName": "STORAGE_RECEIVER_OUTPUT_QUEUE",
-      "connection": "AzureServiceBusConnectionString"
+      "connection": "StorageAccountConnectionString"
     }
   ]
 }

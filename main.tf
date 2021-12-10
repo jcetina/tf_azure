@@ -156,6 +156,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.log_pipeline_function_application_insights.instrumentation_key,
     "HEC_TOKEN_SECRET_NAME"          = var.hec_token_name,
     "VAULT_URI"                      = azurerm_key_vault.log_pipeline_vault.vault_uri,
+    "StorageAccountConnectionString" = azurerm_storage_account.log_pipeline_function_app_storage.primary_connection_string,
   }
 
   identity {
@@ -184,7 +185,7 @@ resource "azurerm_role_assignment" "log_reader" {
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
 
-resource "azurerm_role_assignment" "service_bus_sender" {
+resource "azurerm_role_assignment" "storage_queue_sender" {
   scope                = azurerm_storage_queue.queues[local.event_output_queue].id
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
