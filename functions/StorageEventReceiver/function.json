@@ -7,6 +7,13 @@
       "direction": "in",
       "queueName": "STORAGE_RECEIVER_INPUT_QUEUE",
       "connection": "AzureServiceBusConnectionString"
+    },
+    {
+      "name": "output",
+      "type": "serviceBus",
+      "direction": "out",
+      "topicName": "STORAGE_RECEIVER_OUTPUT_TOPIC",
+      "connection": "AzureServiceBusConnectionString"
     }
   ]
 }

@@ -21,8 +21,8 @@ from opencensus.tags import tag_map as tag_map_module
 
 
 
-# def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
-def main(msg: func.ServiceBusMessage):
+def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
+    
 
     blob_data = io.BytesIO()
     credential = DefaultAzureCredential()
