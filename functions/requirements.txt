@@ -7,4 +7,4 @@ azure-storage-blob
 opencensus
 opencensus-ext-azure
 # avro
-typing
+# typing
