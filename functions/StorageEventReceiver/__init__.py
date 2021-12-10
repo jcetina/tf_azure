@@ -26,6 +26,8 @@ def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
 
     blob_data = io.BytesIO()
     credential = DefaultAzureCredential()
+    logging.info("working")
+    s = """
     msg_body = msg.get_body().decode('utf-8')
     msg_dict = json.loads(msg_body)
     blob_url = msg_dict.get('data', {}).get('url')
@@ -87,3 +89,4 @@ def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
 
     except Exception as e:
         logging.info('error: {}'.format(str(e)))
+    """
