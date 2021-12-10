@@ -7,8 +7,8 @@ import azure.functions as func
 import requests
 import typing
 
-# from avro.datafile import DataFileReader
-# from avro.io import DatumReader
+from avro.datafile import DataFileReader
+from avro.io import DatumReader
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 from azure.storage.blob import BlobClient
@@ -21,7 +21,7 @@ from opencensus.tags import tag_map as tag_map_module
 
 
 
-def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
+def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
     
 
     blob_data = io.BytesIO()
