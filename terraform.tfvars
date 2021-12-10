@@ -1,4 +1,4 @@
-prefix = "aud-pl"
+prefix = "log-pl"
 
 location = "eastus"
 
