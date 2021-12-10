@@ -34,7 +34,8 @@ def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
         logging.info('blob url: {}'.format(blob_url))
         blob_client = BlobClient.from_blob_url(blob_url, credential=credential)
         blob_stream = blob_client.download_blob()
-        blob_byte_count = blob_stream.download_to_stream(blob_data)
+        blob_properties = blob_stream.download_to_stream(blob_data)
+        blob_byte_count = blob_properties.size
         blob_data.seek(0)
         #logging.info('blob data: {}'.format(blob_data))
         hec_secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
