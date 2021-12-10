@@ -1,10 +1,14 @@
+import io
 import json
 import logging
 import os
 
+import avro
 import azure.functions as func
 import requests
 
+from avro.datafile import DataFileReader
+from avro.io import DatumReader
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 from azure.storage.blob import BlobClient
@@ -20,25 +24,29 @@ from opencensus.tags import tag_map as tag_map_module
 def main(msg: func.ServiceBusMessage, out: func.Out[bytes]):
     
 
+    blob_data = io.BytesIO()
     credential = DefaultAzureCredential()
     msg_body = msg.get_body().decode('utf-8')
     msg_dict = json.loads(msg_body)
     blob_url = msg_dict.get('data', {}).get('url')
     logging.info('blob url: {}'.format(blob_url))
     blob_client = BlobClient.from_blob_url(blob_url, credential=credential)
-    blob_data = blob_client.download_blob().readall()
-    logging.info('blob data: {}'.format(blob_data))
+    blob_byte_count = blob_client.download_to_stream(blob_data)
+    blob_data.seek(0)
+    #logging.info('blob data: {}'.format(blob_data))
     hec_secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
     vault = os.environ.get('VAULT_URI')
     secret_client = SecretClient(vault_url=vault, credential=credential)
     hec_secret = secret_client.get_secret(hec_secret_name)
     logging.info('secret name:{}, secret value:{}'.format(hec_secret.name, 'redacted'))
-
+    reader = DataFileReader(blob_data, DatumReader())
     hec_event_string = ''
-    for line in blob_data.decode('utf-8').splitlines():
-        event = json.loads(line)
-        hec_event_string += '{}\n'.format(json.dumps(event))
+    line_count = 0
+    for record in reader:
+        line = json.dumps(record)
+        hec_event_string += '{}\n'.format(line)
         out.set(line.encode('utf-8'))
+        line_count += 1
     
     logging.info(hec_event_string)
 
@@ -64,8 +72,8 @@ def main(msg: func.ServiceBusMessage, out: func.Out[bytes]):
         mmap = stats_recorder.new_measurement_map()
         tmap = tag_map_module.TagMap()
 
-        mmap.measure_int_put(LINES_MEASURE, len(blob_data.decode('utf-8').splitlines()))
-        mmap.measure_int_put(BYTES_MEASURE, len(blob_data))
+        mmap.measure_int_put(LINES_MEASURE, line_count)
+        mmap.measure_int_put(BYTES_MEASURE, blob_byte_count)
         mmap.record(tmap)
         logging.info('lines: {}, bytes: {}'.format(len(blob_data.decode('utf-8').splitlines()), len(blob_data)))
 
