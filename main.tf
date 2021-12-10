@@ -83,12 +83,12 @@ resource "azurerm_servicebus_subscription" "shadow_subs" {
   for_each = {
     (local.event_input_topic) = {
       name       = "${var.prefix}-event-input-shadow-sbs"
-      forward_to = local.event_input_queue
+      forward_to = local.event_input_shadow_queue
     }
 
     (local.event_output_topic) = {
       name       = "${var.prefix}-event-output-shadow-sbs"
-      forward_to = local.event_output_queue
+      forward_to = local.event_output_shadow_queue
     }
   }
   name                = each.value.name
@@ -176,7 +176,7 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
   site_config {
     linux_fx_version          = "PYTHON|3.8"
     use_32_bit_worker_process = false
-    always_on                 = false
+    always_on                 = true
   }
 }
 
