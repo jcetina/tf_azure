@@ -59,46 +59,31 @@ resource "azurerm_servicebus_queue" "shadow_queues" {
 
 resource "azurerm_servicebus_subscription" "subs" {
   for_each = {
-    (local.event_input_topic) = {
-      name       = "${var.prefix}-event-input-sbs"
-      forward_to = local.event_input_queue
+    "${var.prefix}-event-input-sbs-main" = {
+      from = local.event_input_topic
+      to   = local.event_input_queue
     }
-
-    (local.event_output_topic) = {
-      name       = "${var.prefix}-event-output-sbs"
-      forward_to = local.event_output_queue
+    "${var.prefix}-event-input-sbs-shadow" = {
+      from = local.event_input_topic
+      to   = local.event_input_shadow_queue
+    }
+    "${var.prefix}-event-output-sbs-main" = {
+      from = local.event_output_topic
+      to   = local.event_output_queue
+    }
+    "${var.prefix}-event-input-sbs-shadow" = {
+      from = local.event_output_topic
+      to   = local.event_output_shadow_queue
     }
   }
-  name                = each.value.name
+  name                = each.key
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
-  topic_name          = azurerm_servicebus_topic.topics[each.key].name
+  topic_name          = azurerm_servicebus_topic.topics[each.value.from].name
 
   max_delivery_count  = 10
   default_message_ttl = "P14D"
-  forward_to          = azurerm_servicebus_queue.queues[each.value.forward_to].name
-}
-
-resource "azurerm_servicebus_subscription" "shadow_subs" {
-  for_each = {
-    (local.event_input_topic) = {
-      name       = "${var.prefix}-event-input-shadow-sbs"
-      forward_to = local.event_input_shadow_queue
-    }
-
-    (local.event_output_topic) = {
-      name       = "${var.prefix}-event-output-shadow-sbs"
-      forward_to = local.event_output_shadow_queue
-    }
-  }
-  name                = each.value.name
-  resource_group_name = azurerm_resource_group.log_pipeline.name
-  namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
-  topic_name          = azurerm_servicebus_topic.topics[each.key].name
-
-  max_delivery_count  = 10
-  default_message_ttl = "P14D"
-  forward_to          = azurerm_servicebus_queue.queues[each.value.forward_to].name
+  forward_to          = azurerm_servicebus_queue.queues[each.value.to].name
 }
 
 
