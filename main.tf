@@ -269,3 +269,13 @@ resource "random_string" "func_storage_account" {
   upper   = false
   special = false
 }
+
+resource "null_resource" "sync_triggers" {
+  triggers = {
+    function_app = azurerm_function_app.log_pipeline_function_app.id
+  }
+  provisioner "local-exec" {
+    command = "az resource invoke-action --resource-group ${azurerm_resource_group.log_pipeline.name} --action syncfunctiontriggers --name ${azurerm_function_app.log_pipeline_function_app.name} --resource-type Microsoft.Web/sites"
+  }
+}
+
