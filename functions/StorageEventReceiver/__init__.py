@@ -25,37 +25,37 @@ class File(io.BytesIO):
 
 def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
     
-
-    blob_data = File()
-    credential = DefaultAzureCredential()
-    msg_body = msg.get_body().decode('utf-8')
-    msg_dict = json.loads(msg_body)
-    blob_url = msg_dict.get('data', {}).get('url')
-    logging.info('blob url: {}'.format(blob_url))
-    blob_client = BlobClient.from_blob_url(blob_url, credential=credential)
-    blob_stream = blob_client.download_blob()
-    blob_byte_count = blob_stream.download_to_stream(blob_data)
-    blob_data.seek(0)
-    #logging.info('blob data: {}'.format(blob_data))
-    hec_secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
-    vault = os.environ.get('VAULT_URI')
-    secret_client = SecretClient(vault_url=vault, credential=credential)
-    hec_secret = secret_client.get_secret(hec_secret_name)
-    reader = DataFileReader(blob_data, DatumReader())
-    hec_event_string = ''
-    line_count = 0
-    queue_output = []
-    for record in reader:
-        line = json.dumps(record)
-        hec_event_string += '{}\n'.format(line)
-        queue_output.append(line.encode('utf-8'))
-        line_count += 1
-        output.set(line.encode('utf-8')
+    try:
+        blob_data = File()
+        credential = DefaultAzureCredential()
+        msg_body = msg.get_body().decode('utf-8')
+        msg_dict = json.loads(msg_body)
+        blob_url = msg_dict.get('data', {}).get('url')
+        logging.info('blob url: {}'.format(blob_url))
+        blob_client = BlobClient.from_blob_url(blob_url, credential=credential)
+        blob_stream = blob_client.download_blob()
+        blob_byte_count = blob_stream.download_to_stream(blob_data)
+        blob_data.seek(0)
+        #logging.info('blob data: {}'.format(blob_data))
+        hec_secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
+        vault = os.environ.get('VAULT_URI')
+        secret_client = SecretClient(vault_url=vault, credential=credential)
+        hec_secret = secret_client.get_secret(hec_secret_name)
+        reader = DataFileReader(blob_data, DatumReader())
+        hec_event_string = ''
+        line_count = 0
+        queue_output = []
+        for record in reader:
+            line = json.dumps(record)
+            hec_event_string += '{}\n'.format(line)
+            queue_output.append(line.encode('utf-8'))
+            line_count += 1
+            output.set(line.encode('utf-8'))
     
     
 
     # opencensus foo
-    try:
+    
         stats = stats_module.stats
         view_manager = stats.view_manager
         stats_recorder = stats.stats_recorder
