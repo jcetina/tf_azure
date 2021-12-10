@@ -21,7 +21,6 @@ from opencensus.tags import tag_map as tag_map_module
 class File(io.BytesIO):
     # need to make a fake file object with a mode attribute for avro file reader. Dumb.
     def __init__(self):
-        super().__init__()
         self.mode = 'b'
 
 def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
