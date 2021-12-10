@@ -75,7 +75,7 @@ resource "azurerm_servicebus_subscription" "subs" {
       from = local.event_output_topic
       to   = local.event_output_queue
     }
-    "${var.prefix}-event-input-sbs-shadow" = {
+    "${var.prefix}-event-output-sbs-shadow" = {
       from = local.event_output_topic
       to   = local.event_output_shadow_queue
     }
