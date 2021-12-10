@@ -170,8 +170,6 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
     type = "SystemAssigned"
   }
 
-
-
   os_type = "linux"
   version = "~3"
 
@@ -263,6 +261,9 @@ resource "null_resource" "set_input_queue_name" {
   provisioner "local-exec" {
     command = "sed -i 's/STORAGE_RECEIVER_INPUT_QUEUE/${azurerm_servicebus_queue.queues[local.event_input_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
   }
+  depends_on = [
+    null_resource.set_output_queue_name
+  ]
 }
 
 resource "null_resource" "set_output_queue_name" {
