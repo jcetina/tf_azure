@@ -39,22 +39,26 @@ resource "azurerm_servicebus_topic" "topics" {
 }
 
 resource "azurerm_servicebus_queue" "queues" {
-  for_each            = toset([local.event_input_queue, local.event_output_queue])
+  for_each = {
+    (local.event_input_queue) = {
+      dead_letter = true
+    }
+    (local.event_output_queue) = {
+      dead_letter = true
+    }
+    (local.event_input_shadow_queue) = {
+      dead_letter = false
+    }
+    (local.event_output_shadow_queue) = {
+      dead_letter = false
+    }
+  }
   name                = each.key
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
 
   enable_partitioning                  = true
-  dead_lettering_on_message_expiration = true
-}
-
-resource "azurerm_servicebus_queue" "shadow_queues" {
-  for_each            = toset([local.event_input_shadow_queue, local.event_output_shadow_queue])
-  name                = each.key
-  resource_group_name = azurerm_resource_group.log_pipeline.name
-  namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
-
-  enable_partitioning = true
+  dead_lettering_on_message_expiration = each.value.dead_letter
 }
 
 resource "azurerm_servicebus_subscription" "subs" {
