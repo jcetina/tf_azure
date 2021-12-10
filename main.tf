@@ -274,8 +274,7 @@ resource "random_string" "func_storage_account" {
 }
 
 resource "azurerm_storage_queue" "queues" {
-  for_each = [local.event_output_queue]
-
+  for_each             = toset([local.event_output_queue])
   name                 = each.key
   storage_account_name = azurerm_storage_account.log_pipeline_function_app_storage.name
 }
