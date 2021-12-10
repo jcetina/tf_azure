@@ -7,7 +7,7 @@ import azure.functions as func
 import requests
 
 from avro.datafile import DataFileReader
-from avro.io import DatumReader, BinaryDecoder
+from avro.io import DatumReader
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 from azure.storage.blob import BlobClient
@@ -41,9 +41,7 @@ def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
     vault = os.environ.get('VAULT_URI')
     secret_client = SecretClient(vault_url=vault, credential=credential)
     hec_secret = secret_client.get_secret(hec_secret_name)
-    logging.info('secret name:{}, secret value:{}'.format(hec_secret.name, 'redacted'))
-    decoder = BinaryDecoder(blob_data)
-    reader = DatumReader()
+    reader = DataFileReader(blob_data, DatumReader())
     hec_event_string = ''
     line_count = 0
     queue_output = []
