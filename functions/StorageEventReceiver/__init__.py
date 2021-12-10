@@ -45,17 +45,22 @@ def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
         reader = DataFileReader(blob_data, DatumReader())
         hec_event_string = ''
         line_count = 0
-        queue_output = []
-        for record in reader:
-            line = json.dumps(record)
-            hec_event_string += '{}\n'.format(line)
-            queue_output.append(line.encode('utf-8'))
-            line_count += 1
-            output.set(line.encode('utf-8'))
+        for row in reader:
+            body = row['Body']
+            if body:
+                body = body.decode('utf-8')
+            else:
+                exit
+            d = json.loads(body)
+            records = d['records']
+            for record in records:
+                record_json = json.dumps(record)
+                hec_event_string += '{}\n'.format(record_json)
+                line_count += 1
     
     
 
-    # opencensus foo
+        # opencensus foo
     
         stats = stats_module.stats
         view_manager = stats.view_manager
