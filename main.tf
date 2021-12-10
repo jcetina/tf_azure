@@ -19,7 +19,7 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
   service_bus_topic_endpoint_id = azurerm_servicebus_topic.topics[local.event_input_topic].id
   included_event_types          = ["Microsoft.Storage.BlobCreated"]
   subject_filter {
-    ssubject_endsubject_ends_with = ".avro"
+    subject_ends_with = ".avro"
   }
 }
 
