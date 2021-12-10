@@ -18,6 +18,9 @@ resource "azurerm_eventgrid_system_topic_event_subscription" "log_pipeline" {
   resource_group_name           = data.azurerm_storage_account.log_source.resource_group_name
   service_bus_topic_endpoint_id = azurerm_servicebus_topic.topics[local.event_input_topic].id
   included_event_types          = ["Microsoft.Storage.BlobCreated"]
+  subject_filter {
+    ssubject_endsubject_ends_with = ".avro"
+  }
 }
 
 resource "azurerm_servicebus_namespace" "log_pipeline" {
@@ -201,7 +204,7 @@ resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
 
   tenant_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.tenant_id
-  object_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+  object_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.object_id
 
   secret_permissions = [
     "get",
