@@ -5,7 +5,6 @@ import os
 
 import azure.functions as func
 import requests
-import typing
 
 from avro.datafile import DataFileReader
 from avro.io import DatumReader
@@ -26,8 +25,6 @@ def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
 
     blob_data = io.BytesIO()
     credential = DefaultAzureCredential()
-    logging.info("working")
-    s = """
     msg_body = msg.get_body().decode('utf-8')
     msg_dict = json.loads(msg_body)
     blob_url = msg_dict.get('data', {}).get('url')
@@ -79,7 +76,7 @@ def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
         mmap.measure_int_put(LINES_MEASURE, line_count)
         mmap.measure_int_put(BYTES_MEASURE, blob_byte_count)
         mmap.record(tmap)
-        logging.info('lines: {}, bytes: {}'.format(len(blob_data.decode('utf-8').splitlines()), len(blob_data)))
+        logging.info('lines: {}, bytes: {}'.format(line_count, blob_byte_count))
 
         url='https://splunk.mattuebel.com/services/collector/raw?channel=49b42560-9fde-40f6-8c9b-32e0d81be1e2&sourcetype=test'
         authHeader = {'Authorization': 'Splunk {}'.format(hec_secret.value)}
@@ -89,4 +86,3 @@ def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
 
     except Exception as e:
         logging.info('error: {}'.format(str(e)))
-    """
