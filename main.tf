@@ -204,7 +204,7 @@ resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
 
   tenant_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.tenant_id
-  object_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.object_id
+  object_id = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 
   secret_permissions = [
     "get",
