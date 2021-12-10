@@ -7,7 +7,7 @@ import azure.functions as func
 import requests
 
 from avro.datafile import DataFileReader
-from avro.io import DatumReader
+from avro.io import DatumReader, BinaryDecoder
 from azure.identity import DefaultAzureCredential
 from azure.keyvault.secrets import SecretClient
 from azure.storage.blob import BlobClient
@@ -18,12 +18,16 @@ from opencensus.stats import stats as stats_module
 from opencensus.stats import view as view_module
 from opencensus.tags import tag_map as tag_map_module
 
-
+class File(io.BytesIO):
+    # need to make a fake file object with a mode attribute for avro file reader. Dumb.
+    def __init__(self, data):
+        super().__init__(data)
+        self.mode = 'b'
 
 def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
     
 
-    blob_data = io.BytesIO()
+    blob_data = File()
     credential = DefaultAzureCredential()
     msg_body = msg.get_body().decode('utf-8')
     msg_dict = json.loads(msg_body)
@@ -39,7 +43,8 @@ def main(msg: func.ServiceBusMessage, output: func.Out[bytes]):
     secret_client = SecretClient(vault_url=vault, credential=credential)
     hec_secret = secret_client.get_secret(hec_secret_name)
     logging.info('secret name:{}, secret value:{}'.format(hec_secret.name, 'redacted'))
-    reader = DataFileReader(blob_data, DatumReader())
+    decoder = BinaryDecoder(blob_data)
+    reader = DatumReader()
     hec_event_string = ''
     line_count = 0
     queue_output = []
