@@ -1,5 +1,5 @@
 locals {
-  build_string = sha256("${null_resource.set_input_queue_name.id}-${null_resource.set_output_topic_name.id}-${null_resource.python_dependencies.id}")
+  build_string = sha256("${null_resource.set_input_queue_name.id}-${null_resource.set_output_queue_name.id}-${null_resource.python_dependencies.id}")
 
   event_input_topic  = "${var.prefix}-event-input-sbt"
   event_output_topic = "${var.prefix}-event-output-sbt"
