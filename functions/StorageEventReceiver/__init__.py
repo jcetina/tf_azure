@@ -58,7 +58,7 @@ def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
             for record in records:
                 record_json = json.dumps(record)
                 hec_event_string += '{}\n'.format(record_json)
-                output_records.append(record.encode('utf-8'))
+                output_records.append(record_json.encode('utf-8'))
                 line_count += 1
 
         output.set(output_records)
