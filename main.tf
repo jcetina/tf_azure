@@ -185,11 +185,13 @@ resource "azurerm_role_assignment" "log_reader" {
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
 
+/*
 resource "azurerm_role_assignment" "storage_queue_sender" {
   scope                = azurerm_storage_queue.queues[local.event_output_queue].id
   role_definition_name = "Storage Queue Data Contributor"
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
+*/
 
 resource "azurerm_key_vault" "log_pipeline_vault" {
   name                = "${var.prefix}-kv"
