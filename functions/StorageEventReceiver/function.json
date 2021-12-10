@@ -9,10 +9,10 @@
       "connection": "AzureServiceBusConnectionString"
     },
     {
-      "name": "out",
+      "name": "output",
       "type": "serviceBus",
       "direction": "out",
-      "queueName": "STORAGE_RECEIVER_OUTPUT_QUEUE",
+      "topicName": "STORAGE_RECEIVER_OUTPUT_TOPIC",
       "connection": "AzureServiceBusConnectionString"
     }
   ]

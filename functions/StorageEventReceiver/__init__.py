@@ -3,9 +3,9 @@ import json
 import logging
 import os
 
-import avro
 import azure.functions as func
 import requests
+import typing
 
 from avro.datafile import DataFileReader
 from avro.io import DatumReader
@@ -21,7 +21,7 @@ from opencensus.tags import tag_map as tag_map_module
 
 
 
-def main(msg: func.ServiceBusMessage, out: func.Out[bytes]):
+def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[bytes]]):
     
 
     blob_data = io.BytesIO()
@@ -42,13 +42,14 @@ def main(msg: func.ServiceBusMessage, out: func.Out[bytes]):
     reader = DataFileReader(blob_data, DatumReader())
     hec_event_string = ''
     line_count = 0
+    queue_output = []
     for record in reader:
         line = json.dumps(record)
         hec_event_string += '{}\n'.format(line)
-        out.set(line.encode('utf-8'))
+        queue_output.append(line.encode('utf-8'))
         line_count += 1
     
-    logging.info(hec_event_string)
+    output.set(queue_output)
 
     # opencensus foo
     try:

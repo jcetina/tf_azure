@@ -251,16 +251,16 @@ resource "null_resource" "set_input_queue_name" {
     command = "sed -i 's/STORAGE_RECEIVER_INPUT_QUEUE/${azurerm_servicebus_queue.queues[local.event_input_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
   }
   depends_on = [
-    null_resource.set_output_queue_name
+    null_resource.set_output_topic_name
   ]
 }
 
-resource "null_resource" "set_output_queue_name" {
+resource "null_resource" "set_output_topic_name" {
   triggers = {
     build_number = uuid()
   }
   provisioner "local-exec" {
-    command = "sed -i 's/STORAGE_RECEIVER_OUTPUT_QUEUE/${azurerm_servicebus_queue.queues[local.event_output_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
+    command = "sed -i 's/STORAGE_RECEIVER_OUTPUT_TOPIC/${azurerm_servicebus_topic.topics[local.event_output_topic].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
   }
 }
 
