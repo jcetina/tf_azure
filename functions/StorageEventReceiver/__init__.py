@@ -68,3 +68,5 @@ def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[str]]):
         # same error handling strategy
         logging.error('Error publishing output to queue: {}'.format(str(e)))
         raise
+    else:
+        logging.info('Success! {} records forwarded to our queue.'.format(len(output_records)))
