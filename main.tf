@@ -56,8 +56,6 @@ resource "azurerm_servicebus_queue" "queues" {
 
   enable_partitioning                  = true
   dead_lettering_on_message_expiration = each.value.dead_letter
-
-  max_delivery_count = 5
 }
 
 resource "azurerm_servicebus_subscription" "subs" {
