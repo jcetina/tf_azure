@@ -23,6 +23,7 @@ def get_blob(blob_url, credentials):
     blob_stream = blob_client.download_blob()
     _ = blob_stream.download_to_stream(blob_file) #r eturns BlobProperties
     blob_file.seek(0)
+    return blob_file
 
 def gather_audit_records(blob_file):
     reader = DataFileReader(blob_file, DatumReader())

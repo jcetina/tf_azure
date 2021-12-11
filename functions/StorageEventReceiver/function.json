@@ -15,5 +15,10 @@
       "queueName": "STORAGE_RECEIVER_OUTPUT_QUEUE",
       "connection": "StorageAccountConnectionString"
     }
-  ]
+  ],
+  "retry": {
+    "strategy": "fixedDelay",
+    "maxRetryCount": 1,
+    "delayInterval": "00:00:10"
+  }
 }
