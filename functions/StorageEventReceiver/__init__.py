@@ -1,102 +1,70 @@
 import io
 import json
 import logging
-import os
 
 import azure.functions as func
-import requests
 import typing
 
 from avro.datafile import DataFileReader
 from avro.io import DatumReader
 from azure.identity import DefaultAzureCredential
-from azure.keyvault.secrets import SecretClient
 from azure.storage.blob import BlobClient
-from opencensus.ext.azure import metrics_exporter
-from opencensus.stats import aggregation as aggregation_module
-from opencensus.stats import measure as measure_module
-from opencensus.stats import stats as stats_module
-from opencensus.stats import view as view_module
-from opencensus.tags import tag_map as tag_map_module
 
 class File(io.BytesIO):
     # need to make a fake file object with a mode attribute for avro file reader. Dumb.
     def __init__(self):
         self.mode = 'b'
 
+def get_blob(blob_url, credentials):
+    logging.info('Getting blob url: {}'.format(blob_url))
+    blob_file = File()
+    logging.info('blob url: {}'.format(blob_url))
+    blob_client = BlobClient.from_blob_url(blob_url, credential=credentials)
+    blob_stream = blob_client.download_blob()
+    _ = blob_stream.download_to_stream(blob_file) #r eturns BlobProperties
+    blob_file.seek(0)
+
+def gather_audit_records(blob_file):
+    reader = DataFileReader(blob_file, DatumReader())
+    output_records = []
+    for row in reader:
+        body = row['Body']
+        if body:
+            body = body.decode('utf-8')
+        else:
+            return
+        d = json.loads(body)
+        records = d['records']
+        for record in records:
+            record_json = json.dumps(record)
+            output_records.append(record_json)
+    return output_records
+
 def main(msg: func.ServiceBusMessage, output: func.Out[typing.List[str]]):
-    
     try:
-        blob_data = File()
-        credential = DefaultAzureCredential()
+        credentials = DefaultAzureCredential()
         msg_body = msg.get_body().decode('utf-8')
         msg_dict = json.loads(msg_body)
         blob_url = msg_dict.get('data', {}).get('url')
-        logging.info('blob url: {}'.format(blob_url))
-        blob_client = BlobClient.from_blob_url(blob_url, credential=credential)
-        blob_stream = blob_client.download_blob()
-        blob_properties = blob_stream.download_to_stream(blob_data)
-        blob_byte_count = blob_properties.size
-        blob_data.seek(0)
-        #logging.info('blob data: {}'.format(blob_data))
-        hec_secret_name = os.environ.get('HEC_TOKEN_SECRET_NAME')
-        vault = os.environ.get('VAULT_URI')
-        secret_client = SecretClient(vault_url=vault, credential=credential)
-        hec_secret = secret_client.get_secret(hec_secret_name)
-        reader = DataFileReader(blob_data, DatumReader())
-        hec_event_string = ''
-        line_count = 0
-        output_records = []
-        for row in reader:
-            body = row['Body']
-            if body:
-                body = body.decode('utf-8')
-            else:
-                exit
-            d = json.loads(body)
-            records = d['records']
-            for record in records:
-                record_json = json.dumps(record)
-                hec_event_string += '{}\n'.format(record_json)
-                output_records.append(record_json)
-                line_count += 1
-
-        output.set(output_records)
-
-        # opencensus foo
-    
-        stats = stats_module.stats
-        view_manager = stats.view_manager
-        stats_recorder = stats.stats_recorder
-        
-        LINES_MEASURE = measure_module.MeasureInt("line_count", "Number of lines in received file", "1")
-        BYTES_MEASURE = measure_module.MeasureInt("byte_count", "Number of bytes in received file", "By")
-
-        LINES_VIEW = view_module.View('lines_view', "number of lines", [], LINES_MEASURE, aggregation_module.SumAggregation())
-        BYTES_VIEW = view_module.View('bytes_view', "number of bytes", [], BYTES_MEASURE, aggregation_module.SumAggregation())
-
-        connection_string = 'InstrumentationKey={}'.format(os.environ['APPINSIGHTS_INSTRUMENTATIONKEY'])
-        exporter = metrics_exporter.new_metrics_exporter(
-            connection_string=connection_string
-        )
-        view_manager.register_exporter(exporter)
-        view_manager.register_view(LINES_VIEW)
-        view_manager.register_view(BYTES_VIEW)
-        mmap = stats_recorder.new_measurement_map()
-        tmap = tag_map_module.TagMap()
-
-        mmap.measure_int_put(LINES_MEASURE, line_count)
-        mmap.measure_int_put(BYTES_MEASURE, blob_byte_count)
-        mmap.record(tmap)
-        logging.info('lines: {}, bytes: {}'.format(line_count, blob_byte_count))
-
-        url='https://splunk.mattuebel.com/services/collector/raw?channel=49b42560-9fde-40f6-8c9b-32e0d81be1e2&sourcetype=test'
-        authHeader = {'Authorization': 'Splunk {}'.format(hec_secret.value)}
-        if hec_event_string:
-            r = requests.post(url, headers=authHeader, data=hec_event_string.encode('utf-8'), verify=False)
-            logging.info('response: {}'.format(r.text))
-        else:
-            logging.info('no data sent to hec')
-
+        blob_file = get_blob(blob_url, credentials)
     except Exception as e:
-        logging.info('error: {}'.format(str(e)))
+        # Error handling strategy: log the error and raise it again.
+        # This will cause the function app to return non-0, which will
+        # leave the message in the service bus queue. If it doesn't work 5 times,
+        # it will dead letter, which is what we want.
+        logging.error('Error retrieving blob: {}'.format(str(e)))
+        raise
+
+    try:
+        output_records = gather_audit_records(blob_file)
+    except Exception as e:
+        # same error handling strategy
+        logging.error('Error retrieving output records: {}'.format(str(e)))
+        raise
+
+    try:
+        output.set(output_records)
+    except Exception as e:
+        # same error handling strategy
+        logging.error('Error publishing output to queue: {}'.format(str(e)))
+        raise

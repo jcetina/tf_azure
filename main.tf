@@ -32,7 +32,7 @@ resource "azurerm_servicebus_namespace" "log_pipeline" {
 }
 
 resource "azurerm_servicebus_topic" "topics" {
-  for_each            = toset([local.event_input_topic, local.event_output_topic])
+  for_each            = toset([local.event_input_topic])
   name                = each.key
   resource_group_name = azurerm_resource_group.log_pipeline.name
   namespace_name      = azurerm_servicebus_namespace.log_pipeline.name
@@ -46,13 +46,7 @@ resource "azurerm_servicebus_queue" "queues" {
     (local.event_input_queue) = {
       dead_letter = true
     }
-    (local.event_output_queue) = {
-      dead_letter = true
-    }
     (local.event_input_shadow_queue) = {
-      dead_letter = false
-    }
-    (local.event_output_shadow_queue) = {
       dead_letter = false
     }
   }
@@ -74,14 +68,6 @@ resource "azurerm_servicebus_subscription" "subs" {
       from = local.event_input_topic
       to   = local.event_input_shadow_queue
     }
-    "${var.prefix}-event-output-sbs-main" = {
-      from = local.event_output_topic
-      to   = local.event_output_queue
-    }
-    "${var.prefix}-event-output-sbs-shadow" = {
-      from = local.event_output_topic
-      to   = local.event_output_shadow_queue
-    }
   }
   name                = each.key
   resource_group_name = azurerm_resource_group.log_pipeline.name
@@ -99,7 +85,7 @@ resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
   resource_group_name      = azurerm_resource_group.log_pipeline.name
   location                 = azurerm_resource_group.log_pipeline.location
   account_tier             = "Standard"
-  account_replication_type = "LRS"
+  account_replication_type = "GRS"
 }
 
 resource "azurerm_storage_container" "log_pipeline_function_app_storage_container" {
@@ -119,6 +105,12 @@ resource "azurerm_storage_blob" "func_app_storage_blob" {
   content_md5 = filemd5(data.archive_file.function_zip.output_path)
 }
 
+resource "azurerm_storage_queue" "queues" {
+  for_each             = toset([local.event_output_queue])
+  name                 = each.key
+  storage_account_name = azurerm_storage_account.log_pipeline_function_app_storage.name
+}
+
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
   name                = "${var.prefix}-plan"
   location            = azurerm_resource_group.log_pipeline.location
@@ -127,7 +119,7 @@ resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
   reserved            = true
   sku {
     tier = "Standard"
-    size = "S3"
+    size = "S1"
   }
 }
 
@@ -185,14 +177,6 @@ resource "azurerm_role_assignment" "log_reader" {
   principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
 }
 
-/*
-resource "azurerm_role_assignment" "storage_queue_sender" {
-  scope                = azurerm_storage_queue.queues[local.event_output_queue].id
-  role_definition_name = "Storage Queue Data Contributor"
-  principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
-}
-*/
-
 resource "azurerm_key_vault" "log_pipeline_vault" {
   name                = "${var.prefix}-kv"
   location            = azurerm_resource_group.log_pipeline.location
@@ -216,6 +200,8 @@ resource "azurerm_key_vault_access_policy" "function_app_read_policy" {
 }
 
 resource "azurerm_key_vault_access_policy" "key_setter_policy" {
+
+  # this is needed so that the deploying account can set vault secrets
   key_vault_id = azurerm_key_vault.log_pipeline_vault.id
 
   tenant_id = data.azurerm_client_config.current.tenant_id
@@ -274,10 +260,4 @@ resource "random_string" "func_storage_account" {
   length  = 24 - length(replace(format("%s%s", var.prefix, var.func_storage_account_suffix), "/[^a-z0-9]/", ""))
   upper   = false
   special = false
-}
-
-resource "azurerm_storage_queue" "queues" {
-  for_each             = toset([local.event_output_queue])
-  name                 = each.key
-  storage_account_name = azurerm_storage_account.log_pipeline_function_app_storage.name
 }
