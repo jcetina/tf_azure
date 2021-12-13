@@ -18,10 +18,9 @@ class File(io.BytesIO):
 def get_blob(blob_url, credentials):
     logging.info('Getting blob url: {}'.format(blob_url))
     blob_file = File()
-    logging.info('blob url: {}'.format(blob_url))
     blob_client = BlobClient.from_blob_url(blob_url, credential=credentials)
     blob_stream = blob_client.download_blob()
-    _ = blob_stream.download_to_stream(blob_file) #r eturns BlobProperties
+    _ = blob_stream.download_to_stream(blob_file) # returns BlobProperties
     blob_file.seek(0)
     return blob_file
 

@@ -226,6 +226,38 @@ resource "azurerm_key_vault_secret" "hec_token" {
 }
 
 
+resource "azurerm_logic_app_workflow" "message_batch_workflow" {
+  name                = "${var.prefix}-logic"
+  location            = azurerm_resource_group.log_pipeline.location
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+}
+
+resource "azurerm_logic_app_trigger_custom" "example" {
+  name         = "${var.prefix}-logic-trigger"
+  logic_app_id = azurerm_logic_app_workflow.message_batch_workflow.id
+
+  body = <<BODY
+{
+  "inputs": {
+    "configurations": {
+      "msg1k-or-freq5m": {
+        "releaseCriteria": {
+          "messageCount": 1000,
+           "recurrence": {
+             "frequency": "Minute",
+             "interval": 5
+            }
+          }
+        }
+      },
+      "mode": "Inline"
+    },
+  "type": "Batch"
+}
+BODY
+
+}
+
 resource "null_resource" "python_dependencies" {
   triggers = {
     build_number = uuid()
