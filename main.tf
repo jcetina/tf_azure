@@ -240,7 +240,7 @@ resource "azurerm_logic_app_trigger_custom" "example" {
 {
   "inputs": {
     "configurations": {
-      "msg1k-or-freq5m": {
+      "msg1kOrFreq5m": {
         "releaseCriteria": {
           "messageCount": 1000,
            "recurrence": {
