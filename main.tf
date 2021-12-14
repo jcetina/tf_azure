@@ -371,7 +371,7 @@ resource "azurerm_logic_app_workflow" "message_batch_sender_workflow" {
   "type": "Object"
   CONNS
   }
-  
+
   parameters = {
     "$connections" = <<CONNS
 "value": {
