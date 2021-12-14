@@ -324,19 +324,31 @@ BODY
 
 }
 
-resource "azurerm_logic_app_action_http" "to_splunk" {
+resource "azurerm_logic_app_action_custom" "to_splunk" {
   name         = "to_splunk"
   logic_app_id = azurerm_logic_app_workflow.message_batch_workflow.id
-  method       = "POST"
-  uri          = "https://splunk.mattuebel.com/services/collector/raw?channel=49b42560-9fde-40f6-8c9b-32e0d81be1e2&sourcetype=test"
-  body         = "\@variables('output')"
-  run_after {
-    action_name   = azurerm_logic_app_action_custom.for_each.name
-    action_result = "Succeeded"
-  }
-  headers = {
-    "Authorization" = "Splunk ${var.hec_token_value}"
-  }
+
+  depends_on = [
+    azurerm_logic_app_action_custom.for_each
+  ]
+  body = <<BODY
+{
+    "inputs": {
+        "body": "@variables('output')",
+        "headers": {
+            "Authorization": "Splunk ${var.hec_token_value}"
+        },
+        "method": "POST",
+        "uri": "https://splunk.mattuebel.com/services/collector/raw?channel=49b42560-9fde-40f6-8c9b-32e0d81be1e2&sourcetype=test"
+    },
+    "runAfter": {
+      "for_each": [
+        "Succeeded"
+      ]
+    },
+    "type": "Http"
+}
+BODY
 }
 
 resource "null_resource" "python_dependencies" {
