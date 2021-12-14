@@ -368,7 +368,7 @@ resource "azurerm_logic_app_workflow" "message_batch_sender_workflow" {
 
 resource "azurerm_logic_app_trigger_custom" "queue_trigger" {
   name         = "${var.prefix}-sender-logic-trigger"
-  logic_app_id = azurerm_logic_app_workflow.message_batch_workflow.id
+  logic_app_id = azurerm_logic_app_workflow.message_batch_sender_workflow.id
 
   body = <<BODY
 {
