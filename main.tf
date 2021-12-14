@@ -268,8 +268,7 @@ resource "azurerm_logic_app_action_custom" "init_output" {
     "variables": [
           {
               "name": "output",
-              "type": "string",
-              "value: ""
+              "type": "string"
           }
       ]
   },
