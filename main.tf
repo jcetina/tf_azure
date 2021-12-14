@@ -329,7 +329,7 @@ resource "azurerm_logic_app_action_http" "to_splunk" {
   logic_app_id = azurerm_logic_app_workflow.message_batch_workflow.id
   method       = "POST"
   uri          = "https://splunk.mattuebel.com/services/collector/raw?channel=49b42560-9fde-40f6-8c9b-32e0d81be1e2&sourcetype=test"
-  body         = "@variables('output')"
+  body         = "\@variables('output')"
   run_after {
     action_name   = azurerm_logic_app_action_custom.for_each.name
     action_result = "Succeeded"
