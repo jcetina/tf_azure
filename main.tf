@@ -232,7 +232,7 @@ resource "azurerm_logic_app_workflow" "message_batch_workflow" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
 }
 
-resource "azurerm_logic_app_trigger_custom" "batch_trigger" {
+resource "azurerm_logic_app_trigger_custom" "example" {
   name         = "${var.prefix}-logic-trigger"
   logic_app_id = azurerm_logic_app_workflow.message_batch_workflow.id
 
