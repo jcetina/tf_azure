@@ -309,7 +309,7 @@ resource "azurerm_logic_app_action_custom" "for_each" {
   },
   "foreach": "@triggerBody()['items']",
   "runAfter": {
-      "Initialize_variable": [
+      "init_output": [
           "Succeeded"
       ]
   },
