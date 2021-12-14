@@ -225,7 +225,7 @@ resource "azurerm_key_vault_secret" "hec_token" {
   ]
 }
 
-/*
+
 resource "azurerm_logic_app_workflow" "message_batch_workflow" {
   name                = "${var.prefix}-logic"
   location            = azurerm_resource_group.log_pipeline.location
@@ -284,7 +284,7 @@ resource "azurerm_logic_app_action_custom" "for_each" {
   logic_app_id = azurerm_logic_app_workflow.message_batch_workflow.id
 
   depends_on = [
-    azurerm_logic_app_workflow.message_batch_workflow
+    azurerm_logic_app_action_custom.init_output
   ]
   body = <<BODY
 {
@@ -323,7 +323,7 @@ resource "azurerm_logic_app_action_custom" "for_each" {
 BODY
 
 }
-*/
+
 resource "null_resource" "python_dependencies" {
   triggers = {
     build_number = uuid()
