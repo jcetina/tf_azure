@@ -364,6 +364,14 @@ resource "azurerm_logic_app_workflow" "message_batch_sender_workflow" {
   name                = "${var.prefix}-sender-logic"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
+
+  workflow_parameters = {
+    "$connections" = <<CONNS
+  "defaultValue": {},
+  "type": "Object"
+  CONNS
+  }
+  
   parameters = {
     "$connections" = <<CONNS
 "value": {
