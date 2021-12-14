@@ -289,7 +289,7 @@ resource "azurerm_logic_app_action_custom" "for_each" {
   body = <<BODY
 {
         "Compose": {
-            "inputs": "@join(items('For_each')['content'], ',')",
+            "inputs": "@join(items('for_each')['content'], '\n')",
             "runAfter": {},
             "type": "Compose"
         },
@@ -308,7 +308,7 @@ resource "azurerm_logic_app_action_custom" "for_each" {
     },
     "foreach": "@triggerBody()['items']",
     "runAfter": {
-        "Initialize_variable": [
+        "init_output": [
             "Succeeded"
         ]
     },
