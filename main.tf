@@ -364,9 +364,6 @@ resource "azurerm_logic_app_workflow" "message_batch_sender_workflow" {
   name                = "${var.prefix}-sender-logic"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
-  workflow_parameters = {
-    "$connections" : {}
-  }
   parameters = {
     "$connections" = {
       "value" = {
@@ -378,6 +375,10 @@ resource "azurerm_logic_app_workflow" "message_batch_sender_workflow" {
       }
     }
   }
+  depends_on = [
+    azurerm_resource_group.log_pipeline,
+    data.azurerm_client_config
+  ]
 }
 
 resource "azurerm_logic_app_trigger_custom" "queue_trigger" {
