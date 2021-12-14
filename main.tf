@@ -268,7 +268,8 @@ resource "azurerm_logic_app_action_custom" "init_output" {
     "variables": [
           {
               "name": "output",
-              "type": "string"
+              "type": "string",
+              "value: ""
           }
       ]
   },
@@ -288,36 +289,37 @@ resource "azurerm_logic_app_action_custom" "for_each" {
   ]
   body = <<BODY
 {
-        "Compose": {
-            "inputs": "@join(items('for_each')['content'], '\n')",
-            "runAfter": {},
-            "type": "Compose"
-        },
-        "Set_variable": {
-            "inputs": {
-                "name": "output",
-                "value": "@{outputs('Compose')}"
-            },
-            "runAfter": {
-                "Compose": [
-                    "Succeeded"
-                ]
-            },
-            "type": "SetVariable"
-        }
-    },
-    "foreach": "@triggerBody()['items']",
-    "runAfter": {
-        "init_output": [
-            "Succeeded"
-        ]
-    },
-    "runtimeConfiguration": {
-        "concurrency": {
-            "repetitions": 1
-        }
-    },
-    "type": "Foreach"
+  "actions": {
+      "Compose": {
+          "inputs": "@join(items('for_each')['content'], '\\n')",
+          "runAfter": {},
+          "type": "Compose"
+      },
+      "Set_variable": {
+          "inputs": {
+              "name": "output",
+              "value": "@{outputs('Compose')}"
+          },
+          "runAfter": {
+              "Compose": [
+                  "Succeeded"
+              ]
+          },
+          "type": "SetVariable"
+      }
+  },
+  "foreach": "@triggerBody()['items']",
+  "runAfter": {
+      "Initialize_variable": [
+          "Succeeded"
+      ]
+  },
+  "runtimeConfiguration": {
+      "concurrency": {
+          "repetitions": 1
+      }
+  },
+  "type": "Foreach"
 }
 BODY
 
