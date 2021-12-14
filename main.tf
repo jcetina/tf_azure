@@ -360,6 +360,42 @@ resource "null_resource" "python_dependencies" {
   }
 }
 
+resource "azurerm_logic_app_workflow" "message_batch_sender_workflow" {
+  name                = "${var.prefix}-sender-logic"
+  location            = azurerm_resource_group.log_pipeline.location
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+}
+
+resource "azurerm_logic_app_trigger_custom" "queue_trigger" {
+  name         = "${var.prefix}-sender-logic-trigger"
+  logic_app_id = azurerm_logic_app_workflow.message_batch_workflow.id
+
+  body = <<BODY
+{
+  "evaluatedRecurrence": {
+      "frequency": "Minute",
+      "interval": 1
+  },
+  "inputs": {
+      "host": {
+          "connection": {
+              "name": "@parameters('$connections')['azurequeues']['connectionId']"
+          }
+      },
+      "method": "get",
+      "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/queues/@{encodeURIComponent('${azurerm_storage_queue.queues[local.event_output_queue].name}')}/message_trigger"
+  },
+  "recurrence": {
+      "frequency": "Minute",
+      "interval": 1
+  },
+  "splitOn": "@triggerBody()?['QueueMessagesList']?['QueueMessage']",
+  "type": "ApiConnection"
+}
+BODY
+
+}
+
 resource "null_resource" "set_input_queue_name" {
   triggers = {
     build_number = uuid()
