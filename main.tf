@@ -365,31 +365,18 @@ resource "azurerm_logic_app_workflow" "message_batch_sender_workflow" {
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   workflow_parameters = {
-    "$connections" : <<CONNS
-{
-  "defaultValue": {
-    "value": {
-      "azurequeues": {
-        "connectionId": "string",
-        "connectionName": "azurequeues",
-        "id": "string
-      }
-    }
-  },
-  "type": "Object"
-}
-CONNS
+    "$connections" : {}
   }
   parameters = {
-    "$connections" = <<CONNS
-"value": {
-    "azurequeues": {
-        "connectionId": "/subscriptions/${data.azurerm_client_config.current.client_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/connections/azurequeues",
-        "connectionName": "azurequeues",
-        "id": "/subscriptions/${data.azurerm_client_config.current.client_id}/providers/Microsoft.Web/locations/${azurerm_resource_group.log_pipeline.location}/managedApis/azurequeues"
+    "$connections" = {
+      "value" = {
+        "azurequeues" = {
+          "connectionId"   = "/subscriptions/${data.azurerm_client_config.current.client_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/connections/azurequeues",
+          "connectionName" = "azurequeues",
+          "id"             = "/subscriptions/${data.azurerm_client_config.current.client_id}/providers/Microsoft.Web/locations/${azurerm_resource_group.log_pipeline.location}/managedApis/azurequeues"
+        }
+      }
     }
-}
-CONNS
   }
 }
 
