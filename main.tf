@@ -232,7 +232,7 @@ resource "azurerm_logic_app_workflow" "message_batch_workflow" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
 }
 
-resource "azurerm_logic_app_trigger_custom" "example" {
+resource "azurerm_logic_app_trigger_custom" "batch_trigger" {
   name         = "${var.prefix}-logic-trigger"
   logic_app_id = azurerm_logic_app_workflow.message_batch_workflow.id
 
@@ -242,7 +242,7 @@ resource "azurerm_logic_app_trigger_custom" "example" {
     "configurations": {
       "msg1kOrFreq5m": {
         "releaseCriteria": {
-          "messageCount": 1000,
+          "messageCount": 3,
            "recurrence": {
              "frequency": "Minute",
              "interval": 5
@@ -258,6 +258,70 @@ BODY
 
 }
 
+resource "azurerm_logic_app_action_custom" "init_output" {
+  name         = "init_output"
+  logic_app_id = azurerm_logic_app_workflow.message_batch_workflow.id
+
+  body = <<BODY
+{
+  "inputs": {
+    "variables": [
+          {
+              "name": "output",
+              "type": "string"
+          }
+      ]
+  },
+  "runAfter": {},
+  "type": "InitializeVariable"
+}
+BODY
+
+}
+
+resource "azurerm_logic_app_action_custom" "for_each" {
+  name         = "for_each"
+  logic_app_id = azurerm_logic_app_workflow.message_batch_workflow.id
+
+  depends_on = [
+    azurerm_logic_app_workflow.message_batch_workflow
+  ]
+  body = <<BODY
+{
+        "Compose": {
+            "inputs": "@join(items('For_each')['content'], ',')",
+            "runAfter": {},
+            "type": "Compose"
+        },
+        "Set_variable": {
+            "inputs": {
+                "name": "output",
+                "value": "@{outputs('Compose')}"
+            },
+            "runAfter": {
+                "Compose": [
+                    "Succeeded"
+                ]
+            },
+            "type": "SetVariable"
+        }
+    },
+    "foreach": "@triggerBody()['items']",
+    "runAfter": {
+        "Initialize_variable": [
+            "Succeeded"
+        ]
+    },
+    "runtimeConfiguration": {
+        "concurrency": {
+            "repetitions": 1
+        }
+    },
+    "type": "Foreach"
+}
+BODY
+
+}
 resource "null_resource" "python_dependencies" {
   triggers = {
     build_number = uuid()
