@@ -335,7 +335,7 @@ resource "azurerm_logic_app_action_http" "to_splunk" {
     action_result = "Succeeded"
   }
   headers = {
-    "Authorization" = "Splunk ${vars.hec_token_value}"
+    "Authorization" = "Splunk ${var.hec_token_value}"
   }
 }
 
