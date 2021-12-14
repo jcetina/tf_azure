@@ -367,7 +367,15 @@ resource "azurerm_logic_app_workflow" "message_batch_sender_workflow" {
   workflow_parameters = {
     "$connections" : <<CONNS
 {
-  "defaultValue": {},
+  "defaultValue": {
+    "value": {
+      "azurequeues": {
+        "connectionId": "string",
+        "connectionName": "azurequeues",
+        "id": "string
+      }
+    }
+  },
   "type": "Object"
 }
 CONNS
