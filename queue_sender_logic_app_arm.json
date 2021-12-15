@@ -1,0 +1,123 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "name": {
+            "defaultValue": null,
+            "type": "String"
+        },
+        "source_queue_name": {
+            "defaultValue": null,
+            "type": "String"
+        },
+        "source_queue_region": {
+            "defaultValue": null,
+            "type": "String"
+        },
+        "receiver_id": {
+            "defaultValue": null,
+            "type": "String"
+        },
+        "receiver_trigger_name": {
+            "defaultValue": null,
+            "type": "String"
+        },
+        "connections_azurequeues_externalid": {
+            "defaultValue": null,
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('name')]",
+            "location": "eastus",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "messages_in_queue": {
+                            "recurrence": {
+                                "frequency": "Minute",
+                                "interval": 1
+                            },
+                            "evaluatedRecurrence": {
+                                "frequency": "Minute",
+                                "interval": 1
+                            },
+                            "splitOn": "@triggerBody()?['QueueMessagesList']?['QueueMessage']",
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
+                                    }
+                                },
+                                "method": "get",
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/queues/@{encodeURIComponent([parameters('source_queue_name')])}/message_trigger"
+                            }
+                        }
+                    },
+                    "actions": {
+                        "delete_message": {
+                            "runAfter": {
+                                "queue-receiver": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
+                                    }
+                                },
+                                "method": "delete",
+                                "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/queues/@{encodeURIComponent([parameters('source_queue_name')])}/messages/@{encodeURIComponent(triggerBody()?['MessageId'])}",
+                                "queries": {
+                                    "popreceipt": "@triggerBody()?['PopReceipt']"
+                                }
+                            }
+                        },
+                        "queue-receiver": {
+                            "runAfter": {},
+                            "type": "SendToBatch",
+                            "inputs": {
+                                "batchName": "input",
+                                "content": "@triggerBody()?['MessageText']",
+                                "host": {
+                                    "triggerName": "[parameters('receiver_trigger_name')]",
+                                    "workflow": {
+                                        "id": "[parameters('workflows_queue_receiver_externalid')]"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "outputs": {}
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azurequeues": {
+                                "connectionId": "[parameters('connections_azurequeues_externalid')]",
+                                "connectionName": "azurequeues",
+                                "id": "/subscriptions/ad3b85d9-1354-4383-a30c-6383716082e4/providers/Microsoft.Web/locations/[parameters('source_queue_region')]/managedApis/azurequeues"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

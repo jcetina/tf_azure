@@ -351,6 +351,33 @@ resource "azurerm_logic_app_action_custom" "to_splunk" {
 BODY
 }
 
+resource "azurerm_resource_group_template_deployment" "queue_sender_logic_arm" {
+  name                = "queue_sender_logic_arm"
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  deployment_mode     = "Complete"
+  parameters_content = jsonencode({
+    "name" = {
+      value = "${var.prefix}-sender-logic"
+    }
+    "source_queue_name" = {
+      value = azurerm_storage_queue.queues[local.event_output_queue].name
+    }
+    "source_queue_region" = {
+      value = var.location
+    }
+    "receiver_id" = {
+      value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Logic/workflows/${azurerm_logic_app_workflow.message_batch_workflow.name}"
+    }
+    "receiver_trigger_name" = {
+      value = azurerm_logic_app_trigger_custom.batch_trigger.name
+    }
+    "connections_azurequeues_externalid" = {
+      value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/connections/azurequeues"
+    }
+  })
+  template_content = file("${path.module}/queue_sender_logic_app_arm.json")
+}
+
 resource "null_resource" "python_dependencies" {
   triggers = {
     build_number = uuid()
