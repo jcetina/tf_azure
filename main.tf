@@ -351,8 +351,8 @@ resource "azurerm_logic_app_action_custom" "to_splunk" {
 BODY
 }
 
-resource "azurerm_resource_group_template_deployment" "queue_sender_logic_arm" {
-  name                = "queue_sender_logic_arm"
+resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
+  name                = "queue_sender_logic"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   deployment_mode     = "Complete"
   parameters_content = jsonencode({
