@@ -360,66 +360,6 @@ resource "null_resource" "python_dependencies" {
   }
 }
 
-resource "azurerm_logic_app_workflow" "message_batch_sender_workflow" {
-  name                = "${var.prefix}-sender-logic"
-  location            = azurerm_resource_group.log_pipeline.location
-  resource_group_name = azurerm_resource_group.log_pipeline.name
-
-  workflow_parameters = {
-    "$connections" = <<CONNS
-  "defaultValue": {},
-  "type": "Object"
-  CONNS
-  }
-
-  parameters = {
-    "$connections" = <<CONNS
-"value": {
-  "azurequeues": {
-    "connectionId": "/subscriptions/${data.azurerm_client_config.current.client_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/connections/azurequeues",
-    "connectionName": "azurequeues",
-    "id": "/subscriptions/${data.azurerm_client_config.current.client_id}/providers/Microsoft.Web/locations/${azurerm_resource_group.log_pipeline.location}/managedApis/azurequeues"
-  }
-}
-CONNS
-
-  }
-  depends_on = [
-    azurerm_resource_group.log_pipeline,
-    data.azurerm_client_config.current
-  ]
-}
-
-resource "azurerm_logic_app_trigger_custom" "queue_trigger" {
-  name         = "${var.prefix}-sender-logic-trigger"
-  logic_app_id = azurerm_logic_app_workflow.message_batch_sender_workflow.id
-
-  body = <<BODY
-{
-  "evaluatedRecurrence": {
-      "frequency": "Minute",
-      "interval": 1
-  },
-  "inputs": {
-      "host": {
-          "connection": {
-              "name": "@parameters('$connections')['azurequeues']['connectionId']"
-          }
-      },
-      "method": "get",
-      "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/queues/@{encodeURIComponent('${azurerm_storage_queue.queues[local.event_output_queue].name}')}/message_trigger"
-  },
-  "recurrence": {
-      "frequency": "Minute",
-      "interval": 1
-  },
-  "splitOn": "@triggerBody()?['QueueMessagesList']?['QueueMessage']",
-  "type": "ApiConnection"
-}
-BODY
-
-}
-
 resource "null_resource" "set_input_queue_name" {
   triggers = {
     build_number = uuid()
