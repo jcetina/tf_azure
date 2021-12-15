@@ -374,6 +374,9 @@ resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
     "connections_azurequeues_externalid" = {
       value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/connections/azurequeues"
     }
+    "connections_azurequeues_id" = {
+      value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Web/locations/@{parameters('source_queue_region')}/managedApis/azurequeues"
+    }
   })
   template_content = file("${path.module}/queue_sender_logic_app_arm.json")
 }

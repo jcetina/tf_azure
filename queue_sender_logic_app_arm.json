@@ -19,6 +19,9 @@
         },
         "connections_azurequeues_externalid": {
             "type": "String"
+        },
+        "connections_azurequeues_id": {
+            "type": "String"
         }
     },
     "variables": {},
@@ -106,7 +109,7 @@
                             "azurequeues": {
                                 "connectionId": "[parameters('connections_azurequeues_externalid')]",
                                 "connectionName": "azurequeues",
-                                "id": "/subscriptions/ad3b85d9-1354-4383-a30c-6383716082e4/providers/Microsoft.Web/locations/[parameters('source_queue_region')]/managedApis/azurequeues"
+                                "id": ["[paramaters('connections_azurequeues_id')]"]
                             }
                         }
                     }
