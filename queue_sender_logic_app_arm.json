@@ -98,7 +98,7 @@
                                 "host": {
                                     "triggerName": "[parameters('receiver_trigger_name')]",
                                     "workflow": {
-                                        "id": "[parameters('workflows_queue_receiver_externalid')]"
+                                        "id": "[parameters('receiver_id')]"
                                     }
                                 }
                             }
