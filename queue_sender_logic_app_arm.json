@@ -3,27 +3,21 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "name": {
-            "defaultValue": null,
             "type": "String"
         },
         "source_queue_name": {
-            "defaultValue": null,
             "type": "String"
         },
         "source_queue_region": {
-            "defaultValue": null,
             "type": "String"
         },
         "receiver_id": {
-            "defaultValue": null,
             "type": "String"
         },
         "receiver_trigger_name": {
-            "defaultValue": null,
             "type": "String"
         },
         "connections_azurequeues_externalid": {
-            "defaultValue": null,
             "type": "String"
         }
     },
@@ -33,7 +27,7 @@
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2017-07-01",
             "name": "[parameters('name')]",
-            "location": "eastus",
+            "location": "[parameters('source_queue_region')]",
             "properties": {
                 "state": "Enabled",
                 "definition": {
