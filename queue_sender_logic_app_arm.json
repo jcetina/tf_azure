@@ -109,7 +109,7 @@
                             "azurequeues": {
                                 "connectionId": "[parameters('connections_azurequeues_externalid')]",
                                 "connectionName": "azurequeues",
-                                "id": "[paramaters('connections_azurequeues_id')]"
+                                "id": "[parameters('connections_azurequeues_id')]"
                             }
                         }
                     }
