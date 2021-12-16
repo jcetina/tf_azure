@@ -97,9 +97,9 @@
                     "$connections": {
                         "value": {
                             "azurequeues": {
-                                "connectionId": "[concat('/subscriptions/', subscription()['subscriptionId'], '/resourceGroups/', resourceGroup()['name'], '/providers/Microsoft.Web/connections/azurequeues')]",
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_queues_name'))]",
                                 "connectionName": "[parameters('connections_queues_name')]",
-                                "id": "[resourceId('Microsoft.Web/connections', parameters('connections_queues_name'))]"
+                                "id": "[concat('/subscriptions/', subscription()['subscriptionId'], '/providers/Microsoft.Web/locations/', resourceGroup()['location'], '/managedApis/azurequeues')]"
                             }
                         }
                     }
