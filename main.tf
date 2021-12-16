@@ -353,6 +353,7 @@ resource "azurerm_logic_app_action_custom" "to_splunk" {
 BODY
 }
 
+/*
 resource "azurerm_resource_group_template_deployment" "queue_connector" {
   name                = "${var.prefix}-${var.queue_connector_name}"
   resource_group_name = azurerm_resource_group.log_pipeline.name
@@ -371,7 +372,7 @@ resource "azurerm_resource_group_template_deployment" "queue_connector" {
   template_content = file("${path.module}/queue_connector_arm.json")
 }
 
-/*
+
 resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
   name                = "queue_sender_logic"
   resource_group_name = azurerm_resource_group.log_pipeline.name
