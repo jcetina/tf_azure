@@ -11,7 +11,7 @@ resource "azurerm_eventgrid_system_topic" "storage_topic" {
   topic_type             = "Microsoft.Storage.StorageAccounts"
 }
 
-resource "azurerm_eventgrid_system_topic_event_subscription" "bl" {
+resource "azurerm_eventgrid_system_topic_event_subscription" "blob_created" {
   name                          = "${var.prefix}-evgs"
   system_topic                  = azurerm_eventgrid_system_topic.storage_topic.name
   resource_group_name           = data.azurerm_storage_account.log_source.resource_group_name
@@ -138,7 +138,7 @@ resource "azurerm_application_insights" "function_app_insights" {
   application_type    = "other"
 }
 
-resource "azurerm_function_app" "log_pipeline_function_app" {
+resource "azurerm_function_app" "function_app" {
   name                       = "${var.prefix}-func"
   location                   = azurerm_resource_group.log_pipeline.location
   resource_group_name        = azurerm_resource_group.log_pipeline.name
@@ -174,13 +174,13 @@ resource "azurerm_function_app" "log_pipeline_function_app" {
 resource "azurerm_role_assignment" "func_reader" {
   scope                = azurerm_storage_account.function_app_storage.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+  principal_id         = data.azurerm_function_app.function_app_data.identity.0.principal_id
 }
 
 resource "azurerm_role_assignment" "log_reader" {
   scope                = data.azurerm_storage_account.log_source.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azurerm_function_app.log_pipeline_function_app_data.identity.0.principal_id
+  principal_id         = data.azurerm_function_app.function_app_data.identity.0.principal_id
 }
 
 resource "azurerm_logic_app_workflow" "batch_receiver" {
