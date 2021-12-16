@@ -79,7 +79,7 @@ resource "azurerm_servicebus_subscription" "subs" {
   forward_to          = azurerm_servicebus_queue.queues[each.value.to].name
 }
 
-/*
+
 resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
   name                     = replace(format("%s%s%s", var.prefix, random_string.func_storage_account.result, var.func_storage_account_suffix), "/[^a-z0-9]/", "")
   resource_group_name      = azurerm_resource_group.log_pipeline.name
@@ -111,6 +111,7 @@ resource "azurerm_storage_queue" "queues" {
   storage_account_name = azurerm_storage_account.log_pipeline_function_app_storage.name
 }
 
+/*
 resource "azurerm_app_service_plan" "log_pipeline_function_app_plan" {
   name                = "${var.prefix}-plan"
   location            = azurerm_resource_group.log_pipeline.location
@@ -215,7 +216,7 @@ resource "azurerm_key_vault_access_policy" "key_setter_policy" {
     "recover"
   ]
 }
-*/
+
 
 resource "azurerm_key_vault_secret" "hec_token" {
   name         = var.hec_token_name
@@ -225,7 +226,7 @@ resource "azurerm_key_vault_secret" "hec_token" {
     azurerm_key_vault_access_policy.key_setter_policy
   ]
 }
-
+*/
 
 resource "azurerm_logic_app_workflow" "message_batch_workflow" {
   name                = "${var.prefix}-logic"
