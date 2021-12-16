@@ -30,3 +30,8 @@ variable "func_storage_account_suffix" {
   type    = string
   default = "funcst"
 }
+
+variable "queue_connector_name" {
+  type    = string
+  default = "queue-connector"
+}
