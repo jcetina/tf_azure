@@ -17,7 +17,7 @@
             "properties": {
                 "displayName": "[parameters('connections_queues_name')]",
                 "api": {
-                    "id": "[concat('/subscriptions/', subscription()['subscriptionId'], '/providers/Microsoft.Web/locations/', resourceGroup()['location'], '/managedApis/', parameters('connections_queues_name'))]"
+                    "id": "[concat('/subscriptions/', subscription()['subscriptionId'], '/providers/Microsoft.Web/locations/', resourceGroup()['location'], '/managedApis/azurequeues')]"
                 }
             }
         }
