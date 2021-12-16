@@ -229,7 +229,7 @@ resource "azurerm_key_vault_secret" "hec_token" {
 */
 
 resource "azurerm_logic_app_workflow" "message_batch_workflow" {
-  name                = "${var.prefix}-logic"
+  name                = "${var.prefix}-batch-receiver-logic"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
 }
