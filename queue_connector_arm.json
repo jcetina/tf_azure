@@ -4,6 +4,12 @@
     "parameters": {
         "connections_queues_name": {
             "type": "String"
+        },
+        "storage_account_name": {
+            "type": "string"
+        },
+        "storage_access_key": {
+            "type": "securestring"
         }
     },
     "variables": {
@@ -18,6 +24,10 @@
                 "displayName": "[parameters('connections_queues_name')]",
                 "api": {
                     "id": "[concat('/subscriptions/', subscription()['subscriptionId'], '/providers/Microsoft.Web/locations/', resourceGroup()['location'], '/managedApis/azurequeues')]"
+                },
+                "parameterValues": {
+                    "accountName": "[parameters('storage_account_name')]",
+                    "accessKey": "[parameters('storage_access_key')]"
                 }
             }
         }

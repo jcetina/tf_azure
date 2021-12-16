@@ -361,6 +361,12 @@ resource "azurerm_resource_group_template_deployment" "queue_connector" {
     "connections_queues_name" = {
       value = "${var.prefix}-${var.queue_connector_name}"
     }
+    "storage_account_name" = {
+      value = azurerm_storage_account.log_pipeline_function_app_storage.name
+    }
+    "storage_access_key" = {
+      value = azurerm_storage_account.log_pipeline_function_app_storage.primary_access_key
+    }
   })
   template_content = file("${path.module}/queue_connector_arm.json")
 }
