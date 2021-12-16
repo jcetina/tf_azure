@@ -13,11 +13,16 @@
         },
         "connections_queues_name": {
             "type": "String"
+        },
+        "storage_account_name": {
+            "type": "string"
+        },
+        "storage_access_key": {
+            "type": "securestring"
         }
     },
     "variables": {
-        "connections_queues_connectionId": "[concat('/subscriptions/', subscription()['subscriptionId'], '/resourceGroups/', resourceGroup()['name'], '/providers/Microsoft.Web/connections/', parameters('connections_queues_name'))]",
-        "connections_queues_id": "[concat('/subscriptions/', subscription()['subscriptionId'], '/providers/Microsoft.Web/locations/', resourceGroup()['location'], '/managedApis/', parameters('connections_queues_name'))]"
+        "connections_queues_id": "[concat('/subscriptions/', subscription()['subscriptionId'], '/providers/Microsoft.Web/locations/', resourceGroup()['location'], '/managedApis/azurequeues')]"
     },
     "resources": [
         {
@@ -54,7 +59,7 @@
                             "inputs": {
                                 "host": {
                                     "connection": {
-                                        "name": "[variables('connections_queues_connectionId')]"
+                                        "name": "[resourceId('Microsoft.Web/connections', parameters('connections_queues_name'))]"
                                     }
                                 },
                                 "method": "get",
@@ -73,7 +78,7 @@
                             "inputs": {
                                 "host": {
                                     "connection": {
-                                        "name": "[variables('connections_queues_connectionId')]"
+                                        "name": "[resourceId('Microsoft.Web/connections', parameters('connections_queues_name'))]"
                                     }
                                 },
                                 "method": "delete",
@@ -118,30 +123,15 @@
             "apiVersion": "2016-06-01",
             "name": "[parameters('connections_queues_name')]",
             "location": "[resourceGroup()['location']]",
-            "kind": "V1",
             "properties": {
                 "displayName": "[parameters('connections_queues_name')]",
-                "statuses": [
-                    {
-                        "status": "Connected"
-                    }
-                ],
-                "customParameterValues": {},
                 "api": {
-                    "name": "[parameters('connections_queues_name')]",
-                    "displayName": "Azure Queues",
-                    "description": "Azure Queue storage provides cloud messaging between application components. Queue storage also supports managing asynchronous tasks and building process work flows.",
-                    "iconUri": "[concat('https://connectoricons-prod.azureedge.net/releases/v1.0.1538/1.0.1538.2619/', parameters('connections_queues_name'), '/icon.png')]",
-                    "brandColor": "#0072C6",
-                    "id": "[variables('connections_queues_id')]",
-                    "type": "Microsoft.Web/locations/managedApis"
+                    "id": "[variables('connections_queues_id')]"
                 },
-                "testLinks": [
-                    {
-                        "requestUri": "[concat('https://management.azure.com:443/subscriptions/', subscription()['subscriptionId'], '/resourceGroups/', resourceGroup()['name'], '/providers/Microsoft.Web/connections/', parameters('connections_queues_name'), '/extensions/proxy/testConnection?api-version=2016-06-01')]",
-                        "method": "get"
-                    }
-                ]
+                "parameterValues": {
+                    "storageaccount": "[parameters('storage_account_name')]",
+                    "sharedkey": "[parameters('storage_access_key')]"
+                }
             }
         }
     ]

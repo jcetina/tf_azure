@@ -353,7 +353,6 @@ resource "azurerm_logic_app_action_custom" "to_splunk" {
 BODY
 }
 
-/*
 resource "azurerm_resource_group_template_deployment" "queue_connector" {
   name                = "${var.prefix}-${var.queue_connector_name}"
   resource_group_name = azurerm_resource_group.log_pipeline.name
@@ -372,26 +371,55 @@ resource "azurerm_resource_group_template_deployment" "queue_connector" {
   template_content = file("${path.module}/queue_connector_arm.json")
 }
 
-
-resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
-  name                = "queue_sender_logic"
+resource "azurerm_logic_app_workflow" "message_send_workflow" {
+  name                = "${var.prefix}-sender-logic"
+  location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
-  deployment_mode     = "Incremental"
-  parameters_content = jsonencode({
-    "workflows_queue_sender_name" = {
-      value = "${var.prefix}-sender-logic"
-    }
-    "source_queue_name" = {
-      value = azurerm_storage_queue.queues[local.event_output_queue].name
-    }
-    "workflows_queue_receiver_externalid" = {
-      value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Logic/workflows/${azurerm_logic_app_workflow.message_batch_workflow.name}"
-    }
-    "connections_queues_name" = {
-      value = "queue-connector"
-    }
-  })
-  template_content = file("${path.module}/queue_sender_logic_app_arm.json")
+}
+
+resource "azurerm_logic_app_trigger_custom" "queue_trigger" {
+  name         = "${var.prefix}-queue-trigger"
+  logic_app_id = azurerm_logic_app_workflow.message_send_workflow.id
+  depends_on = [
+    azurerm_resource_group_template_deployment.queue_connector
+  ]
+  body = <<BODY
+{
+  "evaluatedRecurrence": {
+      "frequency": "Minute",
+      "interval": 1
+  },
+  "inputs": {
+      "host": {
+          "connection": {
+              "name": "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/connections/azurequeues"
+          }
+      },
+      "method": "get",
+      "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/queues/@{encodeURIComponent('${azurerm_storage_queue.queues[local.event_output_queue].name}')}/message_trigger"
+  },
+  "recurrence": {
+      "frequency": "Minute",
+      "interval": 1
+  },
+  "splitOn": "@triggerBody()?['QueueMessagesList']?['QueueMessage']",
+  "type": "ApiConnection"
+}
+BODY
+
+}
+
+/*
+resource "azurerm_logic_app_action_custom" "send_to_receiver" {
+  name         = "init_output"
+  logic_app_id = azurerm_logic_app_workflow.message_send_workflow.id
+
+  body = <<BODY
+{
+
+}
+BODY
+
 }
 */
 
