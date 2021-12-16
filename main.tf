@@ -79,7 +79,7 @@ resource "azurerm_servicebus_subscription" "subs" {
   forward_to          = azurerm_servicebus_queue.queues[each.value.to].name
 }
 
-
+/*
 resource "azurerm_storage_account" "log_pipeline_function_app_storage" {
   name                     = replace(format("%s%s%s", var.prefix, random_string.func_storage_account.result, var.func_storage_account_suffix), "/[^a-z0-9]/", "")
   resource_group_name      = azurerm_resource_group.log_pipeline.name
@@ -215,6 +215,7 @@ resource "azurerm_key_vault_access_policy" "key_setter_policy" {
     "recover"
   ]
 }
+*/
 
 resource "azurerm_key_vault_secret" "hec_token" {
   name         = var.hec_token_name
@@ -351,6 +352,7 @@ resource "azurerm_logic_app_action_custom" "to_splunk" {
 BODY
 }
 
+/*
 resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
   name                = "queue_sender_logic"
   resource_group_name = azurerm_resource_group.log_pipeline.name
@@ -371,6 +373,7 @@ resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
   })
   template_content = file("${path.module}/queue_sender_logic_app_arm.json")
 }
+*/
 
 resource "null_resource" "python_dependencies" {
   triggers = {
