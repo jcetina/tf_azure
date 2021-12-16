@@ -365,11 +365,8 @@ resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
     "workflows_queue_receiver_externalid" = {
       value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Logic/workflows/${azurerm_logic_app_workflow.message_batch_workflow.name}"
     }
-    "connections_azurequeues_externalid" = {
-      value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/connections/azurequeues"
-    }
-    "connections_azurequeues_id" = {
-      value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Web/locations/${azurerm_resource_group.log_pipeline.location}/managedApis/azurequeues"
+    "connections_queues_name" = {
+      value = "queue-connector"
     }
   })
   template_content = file("${path.module}/queue_sender_logic_app_arm.json")
