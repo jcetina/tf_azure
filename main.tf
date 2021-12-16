@@ -212,9 +212,6 @@ resource "azurerm_logic_app_trigger_custom" "batch_trigger" {
   "type": "Batch"
 }
 BODY
-  lifecycle {
-    prevent_destroy = true
-  }
 }
 
 resource "azurerm_logic_app_action_custom" "init_output" {
