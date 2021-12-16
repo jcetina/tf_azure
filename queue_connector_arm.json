@@ -26,8 +26,8 @@
                     "id": "[concat('/subscriptions/', subscription()['subscriptionId'], '/providers/Microsoft.Web/locations/', resourceGroup()['location'], '/managedApis/azurequeues')]"
                 },
                 "parameterValues": {
-                    "accountName": "[parameters('storage_account_name')]",
-                    "accessKey": "[parameters('storage_access_key')]"
+                    "storageaccount": "[parameters('storage_account_name')]",
+                    "sharedkey": "[parameters('storage_access_key')]"
                 }
             }
         }
