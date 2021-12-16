@@ -13,16 +13,7 @@
         },
         "connections_queues_name": {
             "type": "String"
-        },
-        "storage_account_name": {
-            "type": "string"
-        },
-        "storage_access_key": {
-            "type": "securestring"
         }
-    },
-    "variables": {
-        "connections_queues_id": "[concat('/subscriptions/', subscription()['subscriptionId'], '/providers/Microsoft.Web/locations/', resourceGroup()['location'], '/managedApis/azurequeues')]"
     },
     "resources": [
         {
@@ -30,9 +21,6 @@
             "apiVersion": "2017-07-01",
             "name": "[parameters('workflows_queue_sender_name')]",
             "location": "eastus",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/connections', parameters('connections_queues_name'))]"
-            ],
             "properties": {
                 "state": "Enabled",
                 "definition": {
@@ -59,7 +47,7 @@
                             "inputs": {
                                 "host": {
                                     "connection": {
-                                        "name": "[resourceId('Microsoft.Web/connections', parameters('connections_queues_name'))]"
+                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
                                     }
                                 },
                                 "method": "get",
@@ -78,7 +66,7 @@
                             "inputs": {
                                 "host": {
                                     "connection": {
-                                        "name": "[resourceId('Microsoft.Web/connections', parameters('connections_queues_name'))]"
+                                        "name": "@parameters('$connections')['azurequeues']['connectionId']"
                                     }
                                 },
                                 "method": "delete",
@@ -108,29 +96,13 @@
                 "parameters": {
                     "$connections": {
                         "value": {
-                            "[parameters('connections_queues_name')]": {
-                                "connectionId": "[concat('/subscriptions/', subscription()['subscriptionId'], '/resourceGroups/', resourceGroup()['name'], '/providers/Microsoft.Web/connections/', parameters('connections_queues_name'))]",
-                                "connectionName": "[parameters('connections_queues_name')]",
-                                "id": "[variables('connections_queues_id')]"
+                            "azurequeues": {
+                                "connectionId": "[concat('/subscriptions/', subscription()['subscriptionId'], '/resourceGroups/', resourceGroup()['name'], '/providers/Microsoft.Web/connections/azurequeues')]",
+                                "connectionName": "azurequeues",
+                                "id": "[resourceId('Microsoft.Web/connections', parameters('connections_queues_name'))]"
                             }
                         }
                     }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Web/connections",
-            "apiVersion": "2016-06-01",
-            "name": "[parameters('connections_queues_name')]",
-            "location": "[resourceGroup()['location']]",
-            "properties": {
-                "displayName": "[parameters('connections_queues_name')]",
-                "api": {
-                    "id": "[variables('connections_queues_id')]"
-                },
-                "parameterValues": {
-                    "storageaccount": "[parameters('storage_account_name')]",
-                    "sharedkey": "[parameters('storage_access_key')]"
                 }
             }
         }

@@ -372,6 +372,28 @@ resource "azurerm_resource_group_template_deployment" "queue_connector" {
 }
 
 
+resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
+  name                = "${var.prefix}-queue-sender-logic"
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  deployment_mode     = "Incremental"
+  parameters_content = jsonencode({
+    "workflows_queue_sender_name" = {
+      value = "${var.prefix}-sender-logic"
+    }
+    "source_queue_name" = {
+      value = azurerm_storage_queue.queues[local.event_output_queue].name
+    }
+    "workflows_queue_receiver_externalid" = {
+      value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Logic/workflows/${azurerm_logic_app_workflow.message_batch_workflow.name}"
+    }
+    "connections_queues_name" = {
+      value = azurerm_resource_group_template_deployment.queue_connector.name
+    }
+  })
+  template_content = file("${path.module}/queue_sender_logic_app_arm.json")
+}
+
+
 resource "null_resource" "python_dependencies" {
   triggers = {
     build_number = uuid()
