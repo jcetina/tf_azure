@@ -343,20 +343,6 @@ resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
   template_content = file("${path.module}/queue_sender_logic_app_arm.json")
 }
 
-
-resource "azurerm_eventhub_namespace" "evhns_telemetry_pipeline" {
-  name                = "evhns-telemetry-pipeline"
-  location            = azurerm_resource_group.log_pipeline.location
-  resource_group_name = azurerm_resource_group.log_pipeline.name
-  sku                 = "Premium"
-  zone_redundant      = true
-  lifecycle {
-    # https://github.com/hashicorp/terraform-provider-azurerm/issues/6929
-    ignore_changes = [capacity]
-  }
-}
-
-
 resource "null_resource" "python_dependencies" {
   triggers = {
     build_number = uuid()
