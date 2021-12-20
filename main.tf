@@ -339,6 +339,9 @@ resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
     "workflows_queue_receiver_externalid" = {
       value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Logic/workflows/${azurerm_logic_app_workflow.batch_receiver.name}"
     }
+    "workflows_queue_receiver_trigger_name" = {
+      value = azurerm_logic_app_trigger_custom.batch_trigger.name
+    }
     "connections_queues_name" = {
       value = azurerm_resource_group_template_deployment.queue_connector.name
     }
