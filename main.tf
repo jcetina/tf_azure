@@ -351,7 +351,7 @@ resource "azurerm_eventhub_namespace" "evhns_telemetry_pipeline" {
   sku                  = "Premium"
   auto_inflate_enabled = true
   zone_redundant       = true
-  capacity = 1
+  capacity             = 1
   lifecycle {
     # https://github.com/hashicorp/terraform-provider-azurerm/issues/6929
     ignore_changes = [capacity]
