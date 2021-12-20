@@ -245,22 +245,13 @@ resource "azurerm_logic_app_action_custom" "for_each" {
   body = <<BODY
 {
   "actions": {
-      "Compose": {
-          "inputs": "@join(items('for_each')['content'], '\\n')",
+      "Append_to_string_variable": {
           "runAfter": {},
-          "type": "Compose"
-      },
-      "Set_variable": {
+          "type": "AppendToStringVariable",
           "inputs": {
               "name": "output",
-              "value": "@{outputs('Compose')}"
-          },
-          "runAfter": {
-              "Compose": [
-                  "Succeeded"
-              ]
-          },
-          "type": "SetVariable"
+              "value": "concat(items('for_each')['content'], '\\n')"
+          }
       }
   },
   "foreach": "@triggerBody()['items']",
