@@ -8,6 +8,9 @@
         "workflows_queue_receiver_externalid": {
             "type": "String"
         },
+        "workflows_queue_receiver_trigger_name": {
+            "type": "String"
+        },
         "source_queue_name": {
             "type": "String"
         },
@@ -83,7 +86,7 @@
                                 "batchName": "input",
                                 "content": "@triggerBody()?['MessageText']",
                                 "host": {
-                                    "triggerName": "Batch_messages",
+                                    "triggerName": "[parameters('workflows_queue_receiver_trigger_name')]",
                                     "workflow": {
                                         "id": "[parameters('workflows_queue_receiver_externalid')]"
                                     }
