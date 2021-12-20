@@ -349,6 +349,7 @@ resource "azurerm_eventhub_namespace" "evhns_telemetry_pipeline" {
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   sku                 = "Premium"
+  zone_zone_redundant = true
   lifecycle {
     # https://github.com/hashicorp/terraform-provider-azurerm/issues/6929
     ignore_changes = [capacity]
