@@ -250,7 +250,7 @@ resource "azurerm_logic_app_action_custom" "for_each" {
           "type": "AppendToStringVariable",
           "inputs": {
               "name": "output",
-              "value": "concat(items('for_each')['content'], '\\n')"
+              "value": "@concat(items('for_each')['content'], '\\n')"
           }
       }
   },
