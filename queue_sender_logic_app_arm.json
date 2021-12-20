@@ -11,6 +11,9 @@
         "workflows_queue_receiver_trigger_name": {
             "type": "String"
         },
+        "workflows_queue_receiver_batch_name": {
+            "type": "String"
+        },
         "source_queue_name": {
             "type": "String"
         },
@@ -83,7 +86,7 @@
                             "runAfter": {},
                             "type": "SendToBatch",
                             "inputs": {
-                                "batchName": "input",
+                                "batchName": "[parameters('workflows_queue_receiver_batch_name')]",
                                 "content": "@triggerBody()?['MessageText']",
                                 "host": {
                                     "triggerName": "[parameters('workflows_queue_receiver_trigger_name')]",

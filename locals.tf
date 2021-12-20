@@ -9,4 +9,6 @@ locals {
   event_output_queue = "${var.prefix}-event-output-stq"
 
   event_input_shadow_queue = "${var.prefix}-event-input-shadow-sbq"
+
+  batch_name = "msg1kOrFreq5m"
 }

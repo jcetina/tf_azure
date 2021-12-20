@@ -197,7 +197,7 @@ resource "azurerm_logic_app_trigger_custom" "batch_trigger" {
 {
   "inputs": {
     "configurations": {
-      "msg1kOrFreq5m": {
+      "${local.batch_name}": {
         "releaseCriteria": {
           "messageCount": 1000,
            "recurrence": {
@@ -341,6 +341,9 @@ resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
     }
     "workflows_queue_receiver_trigger_name" = {
       value = azurerm_logic_app_trigger_custom.batch_trigger.name
+    }
+    "workflows_queue_receiver_batch_name" = {
+      value = local.batch_name
     }
     "connections_queues_name" = {
       value = azurerm_resource_group_template_deployment.queue_connector.name
