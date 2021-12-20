@@ -295,7 +295,7 @@ resource "azurerm_logic_app_action_custom" "to_splunk" {
             "Authorization": "Splunk ${var.hec_token_value}"
         },
         "method": "POST",
-        "uri": "https://splunk.mattuebel.com/services/collector/raw?channel=49b42560-9fde-40f6-8c9b-32e0d81be1e2&sourcetype=test"
+        "uri": ${var.splunk_endpoint}
     },
     "runAfter": {
       "for_each": [

@@ -39,3 +39,7 @@ variable "queue_connector_name" {
   type    = string
   default = "queue-connector"
 }
+
+variable "splunk_endpoint" {
+  type = string
+}
