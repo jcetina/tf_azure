@@ -345,13 +345,10 @@ resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
 
 
 resource "azurerm_eventhub_namespace" "evhns_telemetry_pipeline" {
-  name                 = "evhns-telemetry-pipeline"
-  location             = azurerm_resource_group.log_pipeline.location
-  resource_group_name  = azurerm_resource_group.log_pipeline.name
-  sku                  = "Premium"
-  auto_inflate_enabled = true
-  zone_redundant       = true
-  capacity             = 1
+  name                = "evhns-telemetry-pipeline"
+  location            = azurerm_resource_group.log_pipeline.location
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  sku                 = "Premium"
   lifecycle {
     # https://github.com/hashicorp/terraform-provider-azurerm/issues/6929
     ignore_changes = [capacity]
