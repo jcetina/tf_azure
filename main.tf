@@ -184,12 +184,6 @@ resource "azurerm_role_assignment" "log_reader" {
   principal_id         = azurerm_function_app.function_app.identity.0.principal_id
 }
 
-resource "azurerm_role_assignment" "vm_contributor" {
-  scope                = azurerm_resource_group.log_pipeline.id
-  role_definition_name = "Virtual Machine Contributor"
-  principal_id         = azurerm_function_app.function_app.identity.0.principal_id
-}
-
 resource "azurerm_logic_app_workflow" "batch_receiver" {
   name                = "${var.prefix}-batch-receiver-logic"
   location            = azurerm_resource_group.log_pipeline.location
