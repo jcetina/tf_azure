@@ -177,7 +177,7 @@ resource "azurerm_user_assigned_identity" "log_pipeline_user" {
   resource_group_name = azurerm_resource_group.log_pipeline.name
   location            = azurerm_resource_group.log_pipeline.location
 
-  name = "${var.prefix}funcidentity"
+  name = "funcidentity"
 }
 
 resource "azurerm_role_assignment" "func_reader" {
