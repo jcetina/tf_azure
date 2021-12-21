@@ -1,4 +1,4 @@
-prefix = "az-aud-pl"
+prefix = "az-aud-foo"
 
 location = "eastus"
 
