@@ -11,7 +11,7 @@ from azure.identity import DefaultAzureCredential
 from azure.storage.blob import BlobClient
 
 class File(io.BytesIO):
-    # need to make a fake file object with a mode attribute for avro file reader. Dumb.
+    # need to make a fake file object with a mode attribute for avro file reader.
     def __init__(self):
         self.mode = 'b'
 

@@ -151,14 +151,16 @@ resource "azurerm_function_app" "function_app" {
     "AzureServiceBusConnectionString" = azurerm_servicebus_namespace.blob_pubsub.default_primary_connection_string,
     "AzureWebJobsStorage"             = azurerm_storage_account.function_app_storage.primary_connection_string,
     # WEBSITE_RUN_FROM_PACKAGE url will update any time the code changes because the blob name includes the md5 of the code zip file
-    "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.function_app_storage_container.name}/${azurerm_storage_blob.func_app_storage_blob.name}",
-    "FUNCTIONS_WORKER_RUNTIME"       = "python",
-    "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.function_app_insights.instrumentation_key,
-    "StorageAccountConnectionString" = azurerm_storage_account.function_app_storage.primary_connection_string,
+    # "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.function_app_storage_container.name}/${azurerm_storage_blob.func_app_storage_blob.name}",
+    "WEBSITE_RUN_FROM_PACKAGE__${azurerm_user_assigned_identity.log_pipeline_user.name}" = "https://${azurerm_storage_account.function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.function_app_storage_container.name}/${azurerm_storage_blob.func_app_storage_blob.name}",
+    "FUNCTIONS_WORKER_RUNTIME"                                                           = "python",
+    "APPINSIGHTS_INSTRUMENTATIONKEY"                                                     = azurerm_application_insights.function_app_insights.instrumentation_key,
+    "StorageAccountConnectionString"                                                     = azurerm_storage_account.function_app_storage.primary_connection_string,
   }
 
   identity {
-    type = "SystemAssigned"
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.log_pipeline_user.id]
   }
 
   os_type = "linux"
@@ -171,16 +173,25 @@ resource "azurerm_function_app" "function_app" {
   }
 }
 
+resource "azurerm_user_assigned_identity" "log_pipeline_user" {
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  location            = azurerm_resource_group.log_pipeline.location
+
+  name = "${var.prefix}funcidentity"
+}
+
 resource "azurerm_role_assignment" "func_reader" {
   scope                = azurerm_storage_account.function_app_storage.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azurerm_function_app.function_app_data.identity.0.principal_id
+  #principal_id         = data.azurerm_function_app.function_app_data.identity.0.principal_id
+  principal_id = azurerm_user_assigned_identity.log_pipeline_user.principal_id
 }
 
 resource "azurerm_role_assignment" "log_reader" {
   scope                = data.azurerm_storage_account.log_source.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azurerm_function_app.function_app_data.identity.0.principal_id
+  #principal_id         = data.azurerm_function_app.function_app_data.identity.0.principal_id
+  principal_id = azurerm_user_assigned_identity.log_pipeline_user.principal_id
 }
 
 resource "azurerm_logic_app_workflow" "batch_receiver" {
