@@ -11,4 +11,6 @@ locals {
   event_input_shadow_queue = "${var.prefix}-event-input-shadow-sbq"
 
   batch_name = "msg1kOrFreq5m"
+
+  func_app_blob_name = "${var.prefix}-func-code-${filemd5(data.archive_file.function_zip.output_path)}.zip"
 }

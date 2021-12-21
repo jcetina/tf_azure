@@ -95,7 +95,7 @@ resource "azurerm_storage_container" "function_app_storage_container" {
 
 resource "azurerm_storage_blob" "func_app_storage_blob" {
   # update the name in order to cause the function app to load a different blob on code changes
-  name                   = "${var.prefix}-func-code-${filemd5(data.archive_file.function_zip.output_path)}.zip"
+  name                   = local.func_app_blob_name
   storage_account_name   = azurerm_storage_account.function_app_storage.name
   storage_container_name = azurerm_storage_container.function_app_storage_container.name
   type                   = "Block"
@@ -151,7 +151,7 @@ resource "azurerm_function_app" "function_app" {
     "AzureServiceBusConnectionString" = azurerm_servicebus_namespace.blob_pubsub.default_primary_connection_string,
     "AzureWebJobsStorage"             = azurerm_storage_account.function_app_storage.primary_connection_string,
     # WEBSITE_RUN_FROM_PACKAGE url will update any time the code changes because the blob name includes the md5 of the code zip file
-    "WEBSITE_RUN_FROM_PACKAGE"       = "https://${azurerm_storage_account.function_app_storage.name}.blob.core.windows.net/${azurerm_storage_container.function_app_storage_container.name}/${azurerm_storage_blob.func_app_storage_blob.name}",
+    "WEBSITE_RUN_FROM_PACKAGE"       = azurerm_storage_blob.func_app_storage_blob.url
     "FUNCTIONS_WORKER_RUNTIME"       = "python",
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.function_app_insights.instrumentation_key,
     "StorageAccountConnectionString" = azurerm_storage_account.function_app_storage.primary_connection_string,
