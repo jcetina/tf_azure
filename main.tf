@@ -175,13 +175,13 @@ resource "azurerm_function_app" "function_app" {
 resource "azurerm_role_assignment" "func_reader" {
   scope                = azurerm_storage_account.function_app_storage.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azurerm_function_app.function_app_data.identity.0.principal_id
+  principal_id         = azurerm_function_app.function_app.identity.0.principal_id
 }
 
 resource "azurerm_role_assignment" "log_reader" {
   scope                = data.azurerm_storage_account.log_source.id
   role_definition_name = "Storage Blob Data Reader"
-  principal_id         = data.azurerm_function_app.function_app_data.identity.0.principal_id
+  principal_id         = azurerm_function_app.function_app.identity.0.principal_id
 }
 
 resource "azurerm_logic_app_workflow" "batch_receiver" {
