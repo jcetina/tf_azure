@@ -10,3 +10,11 @@ data "azurerm_storage_account" "log_source" {
 }
 
 data "azurerm_client_config" "current" {}
+
+data "azurerm_eventhub_authorization_rule" "RootManageSharedAccessKey" {
+  for_each            = azurerm_eventhub.evh_telemetry_pipeline
+  name                = "RootManageSharedAccessKey"
+  namespace_name      = each.value.namespace_name
+  eventhub_name       = each.key
+  resource_group_name = each.value.resource_group_name
+}
