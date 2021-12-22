@@ -1,5 +1,5 @@
 resource "azurerm_eventhub_namespace" "evhns_telemetry_pipeline" {
-  name                = "jrctest-azuretelemetry-pipeline"
+  name                = "jrctest-az-pl"
   location            = azurerm_resource_group.log_pipeline.location
   resource_group_name = azurerm_resource_group.log_pipeline.name
   sku                 = "Premium"
