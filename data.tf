@@ -16,8 +16,8 @@ data "azurerm_eventhub_authorization_rule" "RootManageSharedAccessKey" {
     azurerm_eventhub.evh_telemetry_pipeline
   ]
   for_each            = azurerm_eventhub.evh_telemetry_pipeline
-  name                = "${each.value.namespace_name}/RootManageSharedAccessKey"
-  namespace_name      = each.value.namespace_name
+  name                = "${azurerm_eventhub_namespace.evhns_telemetry_pipeline.name}/RootManageSharedAccessKey"
+  namespace_name      = azurerm_eventhub_namespace.evhns_telemetry_pipeline.name
   eventhub_name       = each.key
-  resource_group_name = each.value.resource_group_name
+  resource_group_name = azurerm_resource_group.log_pipeline.name
 }
