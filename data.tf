@@ -12,6 +12,9 @@ data "azurerm_storage_account" "log_source" {
 data "azurerm_client_config" "current" {}
 
 data "azurerm_eventhub_authorization_rule" "RootManageSharedAccessKey" {
+  depends_on = [
+    azurerm_eventhub.evh_telemetry_pipeline
+  ]
   for_each            = azurerm_eventhub.evh_telemetry_pipeline
   name                = "RootManageSharedAccessKey"
   namespace_name      = each.value.namespace_name
