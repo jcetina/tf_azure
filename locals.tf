@@ -13,4 +13,12 @@ locals {
   batch_name = "msg1kOrFreq5m"
 
   func_app_blob_name = "${var.prefix}-func-code-${filemd5(data.archive_file.function_zip.output_path)}.zip"
+
+  categories = {
+    activitylogs = {
+      eventhub_partitions = 4
+      eventhub_retention  = 7
+    }
+  }
+
 }
