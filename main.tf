@@ -126,8 +126,8 @@ resource "azurerm_app_service_plan" "function_app_plan" {
   kind                = "Linux"
   reserved            = true
   sku {
-    tier = "Standard"
-    size = "S3"
+    tier = "Premium"
+    size = "P1v3"
   }
 }
 
@@ -167,9 +167,8 @@ resource "azurerm_function_app" "function_app" {
   version = "~3"
 
   site_config {
-    linux_fx_version          = "PYTHON|3.8"
-    use_32_bit_worker_process = false
-    always_on                 = true
+    linux_fx_version = "PYTHON|3.8"
+    always_on        = true
   }
 }
 
