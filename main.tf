@@ -155,6 +155,8 @@ resource "azurerm_function_app" "function_app" {
     "FUNCTIONS_WORKER_RUNTIME"       = "python",
     "APPINSIGHTS_INSTRUMENTATIONKEY" = azurerm_application_insights.function_app_insights.instrumentation_key,
     "StorageAccountConnectionString" = azurerm_storage_account.function_app_storage.primary_connection_string,
+    "INPUT_QUEUE_NAME"               = azurerm_servicebus_queue.queues[local.event_input_queue].name,
+    "OUTPUT_QUEUE_NAME"              = azurerm_storage_queue.queues[local.event_output_queue].name,
   }
 
   identity {
@@ -353,6 +355,7 @@ resource "null_resource" "python_dependencies" {
   }
 }
 
+/*
 resource "null_resource" "set_input_queue_name" {
   triggers = {
     build_number = uuid()
@@ -373,6 +376,7 @@ resource "null_resource" "set_output_queue_name" {
     command = "sed -i 's/STORAGE_RECEIVER_OUTPUT_QUEUE/${azurerm_storage_queue.queues[local.event_output_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
   }
 }
+*/
 
 resource "random_string" "func_storage_account" {
   length  = 24 - length(replace(format("%s%s", var.prefix, var.func_storage_account_suffix), "/[^a-z0-9]/", ""))

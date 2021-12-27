@@ -5,14 +5,14 @@
       "name": "msg",
       "type": "serviceBusTrigger",
       "direction": "in",
-      "queueName": "STORAGE_RECEIVER_INPUT_QUEUE",
+      "queueName": "%INPUT_QUEUE_NAME%",
       "connection": "AzureServiceBusConnectionString"
     },
     {
       "name": "output",
       "type": "queue",
       "direction": "out",
-      "queueName": "STORAGE_RECEIVER_OUTPUT_QUEUE",
+      "queueName": "%OUTPUT_QUEUE_NAME%",
       "connection": "StorageAccountConnectionString"
     }
   ]
