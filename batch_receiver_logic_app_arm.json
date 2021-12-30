@@ -1,0 +1,179 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "workflows_batch_receiver_logic_name": {
+            "type": "String"
+        },
+        "connections_blob_name": {
+            "type": "String"
+        },
+        "workflows_batch_receiver_trigger_name": {
+            "type": "String"
+        },
+        "workflows_batch_receiver_batch_name": {
+            "type": "String"
+        },
+        "spillover_container": {
+            "type": "String"
+        },
+        "hec_token": {
+            "type": "SecureString"
+        },
+        "batch_size": {
+            "type": "Int",
+            "defaultValue": 1000
+        },
+        "batch_interval_minutes": {
+            "type": "Int",
+            "defaultValue": 5
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Logic/workflows",
+            "apiVersion": "2017-07-01",
+            "name": "[parameters('workflows_batch_receiver_logic_name')]",
+            "location": "eastus",
+            "properties": {
+                "state": "Enabled",
+                "definition": {
+                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {
+                        "$connections": {
+                            "defaultValue": {},
+                            "type": "Object"
+                        }
+                    },
+                    "triggers": {
+                        "[parameters('workflows_batch_receiver_trigger_name')]": {
+                            "type": "Batch",
+                            "inputs": {
+                                "configurations": {
+                                    "[parameters('workflows_batch_receiver_batch_name')]": {
+                                        "releaseCriteria": {
+                                            "messageCount": "[parameters('batch_size')]",
+                                            "recurrence": {
+                                                "frequency": "Minute",
+                                                "interval": "[parameters('batch_interval_minutes')]"
+                                            }
+                                        }
+                                    }
+                                },
+                                "mode": "Inline"
+                            }
+                        }
+                    },
+                    "actions": {
+                        "for_each": {
+                            "foreach": "@triggerBody()['items']",
+                            "actions": {
+                                "Append_to_string_variable": {
+                                    "runAfter": {},
+                                    "type": "AppendToStringVariable",
+                                    "inputs": {
+                                        "name": "output",
+                                        "value": "@concat(items('for_each')['content'], '\n')"
+                                    }
+                                }
+                            },
+                            "runAfter": {
+                                "init_output": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Foreach",
+                            "runtimeConfiguration": {
+                                "concurrency": {
+                                    "repetitions": 1
+                                }
+                            }
+                        },
+                        "init_output": {
+                            "runAfter": {},
+                            "type": "InitializeVariable",
+                            "inputs": {
+                                "variables": [
+                                    {
+                                        "name": "output",
+                                        "type": "string"
+                                    }
+                                ]
+                            }
+                        },
+                        "to_blob": {
+                            "runAfter": {
+                                "to_splunk": [
+                                    "TimedOut",
+                                    "Skipped",
+                                    "Failed"
+                                ]
+                            },
+                            "type": "ApiConnection",
+                            "inputs": {
+                                "body": "@variables('output')",
+                                "headers": {
+                                    "ReadFileMetadataFromServer": true
+                                },
+                                "host": {
+                                    "connection": {
+                                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                                    }
+                                },
+                                "method": "post",
+                                "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+                                "queries": {
+                                    "folderPath": "[concat('@{concat(''', parameters('spillover_container'), ''', formatDateTime(utcNow(), ''/yyyy/MM/dd/hh/mm''))}')]",
+                                    "name": "@{concat(guid(), '.jsonl')}",
+                                    "queryParametersSingleEncoded": true
+                                }
+                            },
+                            "runtimeConfiguration": {
+                                "contentTransfer": {
+                                    "transferMode": "Chunked"
+                                }
+                            }
+                        },
+                        "to_splunk": {
+                            "runAfter": {
+                                "for_each": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "limit": {
+                                "timeout": "P10S"
+                            },
+                            "type": "Http",
+                            "inputs": {
+                                "body": "@variables('output')",
+                                "headers": {
+                                    "Authorization": "[concat('Splunk ', parameters('hec_token'))]"
+                                },
+                                "method": "POST",
+                                "retryPolicy": {
+                                    "count": 1,
+                                    "interval": "PT10S",
+                                    "type": "fixed"
+                                },
+                                "uri": "https://nx.cetinas.org/services/collector/raw?channel=49b42560-9fde-40f6-8c9b-32e0d81be1e2&sourcetype=test"
+                            }
+                        }
+                    }
+                },
+                "parameters": {
+                    "$connections": {
+                        "value": {
+                            "azureblob": {
+                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('connections_blob_name'))]",
+                                "connectionName": "[parameters('connections_blob_name')]",
+                                "id": "[concat('/subscriptions/', subscription()['subscriptionId'], '/providers/Microsoft.Web/locations/', resourceGroup()['location'], '/managedApis/azureblob')]"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

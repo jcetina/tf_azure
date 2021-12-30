@@ -185,172 +185,13 @@ resource "azurerm_role_assignment" "log_reader" {
   principal_id         = azurerm_function_app.function_app.identity.0.principal_id
 }
 
-resource "azurerm_logic_app_workflow" "batch_receiver" {
-  name                = "${var.prefix}-batch-receiver-logic"
-  location            = azurerm_resource_group.log_pipeline.location
-  resource_group_name = azurerm_resource_group.log_pipeline.name
-}
-
-resource "azurerm_logic_app_trigger_custom" "batch_trigger" {
-  name         = "${var.prefix}-batch-receiver-trigger"
-  logic_app_id = azurerm_logic_app_workflow.batch_receiver.id
-
-  body = <<BODY
-{
-  "inputs": {
-    "configurations": {
-      "${local.batch_name}": {
-        "releaseCriteria": {
-          "messageCount": 1000,
-           "recurrence": {
-             "frequency": "Minute",
-             "interval": 5
-            }
-          }
-        }
-      },
-      "mode": "Inline"
-    },
-  "type": "Batch"
-}
-BODY
-}
-
-resource "azurerm_logic_app_action_custom" "init_output" {
-  name         = "init_output"
-  logic_app_id = azurerm_logic_app_workflow.batch_receiver.id
-
-  body = <<BODY
-{
-  "inputs": {
-    "variables": [
-          {
-              "name": "output",
-              "type": "string"
-          }
-      ]
-  },
-  "runAfter": {},
-  "type": "InitializeVariable"
-}
-BODY
-
-}
-
-resource "azurerm_logic_app_action_custom" "for_each" {
-  name         = "for_each"
-  logic_app_id = azurerm_logic_app_workflow.batch_receiver.id
-
-  depends_on = [
-    azurerm_logic_app_action_custom.init_output
-  ]
-  body = <<BODY
-{
-  "actions": {
-      "Append_to_string_variable": {
-          "runAfter": {},
-          "type": "AppendToStringVariable",
-          "inputs": {
-              "name": "output",
-              "value": "@concat(items('for_each')['content'], '\n')"
-          }
-      }
-  },
-  "foreach": "@triggerBody()['items']",
-  "runAfter": {
-      "init_output": [
-          "Succeeded"
-      ]
-  },
-  "runtimeConfiguration": {
-      "concurrency": {
-          "repetitions": 1
-      }
-  },
-  "type": "Foreach"
-}
-BODY
-
-}
-
-resource "azurerm_logic_app_action_custom" "to_splunk" {
-  name         = "to_splunk"
-  logic_app_id = azurerm_logic_app_workflow.batch_receiver.id
-
-  depends_on = [
-    azurerm_logic_app_action_custom.for_each
-  ]
-  body = <<BODY
-{
-    "inputs": {
-        "body": "@variables('output')",
-        "headers": {
-            "Authorization": "Splunk ${var.hec_token_value}"
-        },
-        "method": "POST",
-        "uri": "${var.splunk_endpoint}"
-    },
-    "runAfter": {
-      "for_each": [
-        "Succeeded"
-      ]
-    },
-    "type": "Http"
-}
-BODY
-}
-
-resource "azurerm_logic_app_action_custom" "to_blob" {
-  name         = "to_blob"
-  logic_app_id = azurerm_logic_app_workflow.batch_receiver.id
-
-  depends_on = [
-    azurerm_logic_app_action_custom.to_splunk
-  ]
-  body = <<BODY
-{
-    "runAfter": {
-        "${azurerm_logic_app_action_custom.to_splunk.name}": [
-            "TimedOut",
-            "Failed",
-            "Skipped"
-        ]
-    },
-    "type": "ApiConnection",
-    "inputs": {
-        "body": "@variables('output')",
-        "headers": {
-            "ReadFileMetadataFromServer": true
-        },
-        "host": {
-            "connection": {
-                "name": "@parameters('$connections')['${azurerm_resource_group_template_deployment.blob_connector.name}']['connectionId']"
-            }
-        },
-        "method": "post",
-        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
-        "queries": {
-            "folderPath": "@{formatDateTime(utcNow(), 'yyyy/MM/dd/hh/mm')}",
-            "name": "@{concat(guid(), '.jsonl')}",
-            "queryParametersSingleEncoded": true
-        }
-    },
-    "runtimeConfiguration": {
-        "contentTransfer": {
-            "transferMode": "Chunked"
-        }
-    }
-}
-BODY
-}
-
 resource "azurerm_resource_group_template_deployment" "queue_connector" {
-  name                = "${var.prefix}-${var.queue_connector_name}"
+  name                = "queue_connector_deployment"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   deployment_mode     = "Incremental"
   parameters_content = jsonencode({
     "connections_queues_name" = {
-      value = "${var.prefix}-${var.queue_connector_name}"
+      value = local.queue_connector_name
     }
     "storage_account_name" = {
       value = azurerm_storage_account.function_app_storage.name
@@ -363,9 +204,12 @@ resource "azurerm_resource_group_template_deployment" "queue_connector" {
 }
 
 resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
-  name                = "${var.prefix}-queue-sender-logic"
+  name                = "${var.prefix}-queue-sender-logic-deployment"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   deployment_mode     = "Incremental"
+  depends_on = [
+    azurerm_resource_group_template_deployment.batch_receiver_logic
+  ]
   parameters_content = jsonencode({
     "workflows_queue_sender_name" = {
       value = "${var.prefix}-sender-logic"
@@ -374,20 +218,83 @@ resource "azurerm_resource_group_template_deployment" "queue_sender_logic" {
       value = azurerm_storage_queue.queues[local.event_output_queue].name
     }
     "workflows_queue_receiver_externalid" = {
-      value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Logic/workflows/${azurerm_logic_app_workflow.batch_receiver.name}"
+      value = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Logic/workflows/${local.batch_receiver_logic_app_name}"
     }
     "workflows_queue_receiver_trigger_name" = {
-      value = azurerm_logic_app_trigger_custom.batch_trigger.name
+      value = local.batch_trigger_name
     }
     "workflows_queue_receiver_batch_name" = {
       value = local.batch_name
     }
     "connections_queues_name" = {
-      value = azurerm_resource_group_template_deployment.queue_connector.name
+      value = local.queue_connector_name
     }
   })
   template_content = file("${path.module}/queue_sender_logic_app_arm.json")
 }
+
+resource "azurerm_resource_group_template_deployment" "batch_receiver_logic" {
+  name                = "${var.prefix}-batch-receiver-logic-deployment"
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  deployment_mode     = "Incremental"
+  /*
+  "workflows_batch_receiver_logic_name": {
+            "type": "String"
+        },
+        "connections_blob_name": {
+            "type": "String"
+        },
+        "workflows_batch_receiver_trigger_name": {
+            "type": "String"
+        },
+        "workflows_batch_receiver_batch_name": {
+            "type": "String"
+        },
+        "spillover_container": {
+            "type": "String"
+        },
+        "hec_token": {
+            "type": "String"
+        },
+        "batch_size": {
+            "type": "Int",
+            "defaultValue": 1000
+        },
+        "batch_interval_minutes": {
+            "type": "Int",
+            "defaultValue": 5
+        }
+  */
+  parameters_content = jsonencode({
+    "workflows_batch_receiver_logic_name" = {
+      value = local.batch_receiver_logic_app_name
+    }
+    "connections_blob_name" = {
+      value = local.blob_connector_name
+    }
+    "workflows_batch_receiver_trigger_name" = {
+      value = local.batch_trigger_name
+    }
+    "workflows_batch_receiver_batch_name" = {
+      value = local.batch_name
+    }
+    "spillover_container" = {
+      value = azurerm_storage_container.spillover_container.name
+    }
+    "hec_token" = {
+      value = var.hec_token_value
+    }
+    "batch_size" = {
+      value = local.batch_size
+    }
+    "batch_interval_minutes" = {
+      value = local.batch_interval_minutes
+    }
+  })
+  template_content = file("${path.module}/batch_receiver_logic_app_arm.json")
+}
+
+
 
 resource "null_resource" "python_dependencies" {
   triggers = {
@@ -418,7 +325,7 @@ resource "azurerm_resource_group_template_deployment" "blob_connector" {
   deployment_mode     = "Incremental"
   parameters_content = jsonencode({
     "connections_azureblob_name" = {
-      value = "${var.prefix}-blob-connector"
+      value = local.blob_connector_name
     }
     "storage_account_name" = {
       value = azurerm_storage_account.splunk_spillover_storage.name
@@ -429,28 +336,6 @@ resource "azurerm_resource_group_template_deployment" "blob_connector" {
   })
   template_content = file("${path.root}/blob_connector_arm.json")
 }
-/*
-resource "null_resource" "set_input_queue_name" {
-  triggers = {
-    build_number = uuid()
-  }
-  provisioner "local-exec" {
-    command = "sed -i 's/STORAGE_RECEIVER_INPUT_QUEUE/${azurerm_servicebus_queue.queues[local.event_input_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
-  }
-  depends_on = [
-    null_resource.set_output_queue_name
-  ]
-}
-
-resource "null_resource" "set_output_queue_name" {
-  triggers = {
-    build_number = uuid()
-  }
-  provisioner "local-exec" {
-    command = "sed -i 's/STORAGE_RECEIVER_OUTPUT_QUEUE/${azurerm_storage_queue.queues[local.event_output_queue].name}/g' ${path.module}/functions/StorageEventReceiver/function.json"
-  }
-}
-*/
 
 resource "random_string" "func_storage_account" {
   length  = 24 - length(replace(format("%s%s", var.prefix, var.func_storage_account_suffix), "/[^a-z0-9]/", ""))

@@ -11,7 +11,7 @@ locals {
 
   event_input_shadow_queue = "${var.prefix}-event-input-shadow-sbq"
 
-  batch_name = "msg1kOrFreq5m"
+  batch_name = "splunk_batch"
 
   func_app_blob_name = "${var.prefix}-func-code-${filemd5(data.archive_file.function_zip.output_path)}.zip"
 
@@ -22,4 +22,15 @@ locals {
     }
   }
 
+  batch_receiver_logic_app_name = "${var.prefix}-batch-receiver"
+
+  blob_connector_name = "${var.prefix}-blob-connector"
+
+  queue_connector_name = "${var.prefix}-queue-connector"
+
+  batch_trigger_name = "${var.prefix}-batch-trigger"
+
+  batch_size = 1000
+
+  batch_interval_minutes = 5
 }
