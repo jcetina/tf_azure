@@ -309,17 +309,25 @@ resource "azurerm_logic_app_action_custom" "to_blob" {
   ]
   body = <<BODY
 {
+    "runAfter": {
+        "${azurerm_logic_app_action_custom.to_splunk.name}": [
+            "TimedOut",
+            "Failed",
+            "Skipped"
+        ]
+    },
+    "type": "ApiConnection",
     "inputs": {
+        "body": "@variables('output')",
+        "headers": {
+            "ReadFileMetadataFromServer": true
+        },
         "host": {
             "connection": {
                 "name": "@parameters('$connections')['${azurerm_resource_group_template_deployment.blob_connector.name}']['connectionId']"
             }
         },
         "method": "post",
-        "body": "@variables('output')",
-        "headers": {
-            "ReadFileMetadataFromServer": true
-        },
         "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
         "queries": {
             "folderPath": "@{formatDateTime(utcNow(), 'yyyy/MM/dd/hh/mm')}",
