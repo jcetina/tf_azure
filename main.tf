@@ -300,6 +300,42 @@ resource "azurerm_logic_app_action_custom" "to_splunk" {
 BODY
 }
 
+resource "azurerm_logic_app_action_custom" "to_blob" {
+  name         = "to_splunk"
+  logic_app_id = azurerm_logic_app_workflow.batch_receiver.id
+
+  depends_on = [
+    azurerm_logic_app_action_custom.to_splunk
+  ]
+  body = <<BODY
+{
+    "inputs": {
+        "host": {
+            "connection": {
+                "name": "@parameters('$connections')['${azurerm_resource_group_template_deployment.blob_connector.name}']['connectionId']"
+            }
+        },
+        "method": "post",
+        "body": "@variables('output')",
+        "headers": {
+            "ReadFileMetadataFromServer": true
+        },
+        "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/files",
+        "queries": {
+            "folderPath": "@{formatDateTime(utcNow(), 'yyyy/MM/dd/hh/mm')}",
+            "name": "@{concat(guid(), '.jsonl')}",
+            "queryParametersSingleEncoded": true
+        }
+    },
+    "runtimeConfiguration": {
+        "contentTransfer": {
+            "transferMode": "Chunked"
+        }
+    }
+}
+BODY
+}
+
 resource "azurerm_resource_group_template_deployment" "queue_connector" {
   name                = "${var.prefix}-${var.queue_connector_name}"
   resource_group_name = azurerm_resource_group.log_pipeline.name
@@ -369,12 +405,12 @@ resource "azurerm_storage_container" "spillover_container" {
 }
 
 resource "azurerm_resource_group_template_deployment" "blob_connector" {
-  name                = "blob_connector"
+  name                = "${var.prefix}-blob-connector"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   deployment_mode     = "Incremental"
   parameters_content = jsonencode({
     "connections_azureblob_name" = {
-      value = "azureblob"
+      value = "${var.prefix}-blob-connector"
     }
     "storage_account_name" = {
       value = azurerm_storage_account.splunk_spillover_storage.name
