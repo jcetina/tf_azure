@@ -354,6 +354,37 @@ resource "null_resource" "python_dependencies" {
   }
 }
 
+resource "azurerm_storage_account" "splunk_spillover_storage" {
+  name                     = "jrctestspillover"
+  resource_group_name      = azurerm_resource_group.log_pipeline.name
+  location                 = azurerm_resource_group.log_pipeline.location
+  account_tier             = "Standard"
+  account_replication_type = "GRS"
+}
+
+resource "azurerm_storage_container" "spillover_container" {
+  name                  = "spillover"
+  storage_account_name  = azurerm_storage_account.splunk_spillover_storage.name
+  container_access_type = "private"
+}
+
+resource "azurerm_resource_group_template_deployment" "blob_connector" {
+  name                = "blob_connector"
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  deployment_mode     = "Incremental"
+  parameters_content = jsonencode({
+    "connections_azureblob_name" = {
+      value = "azureblob"
+    }
+    "storage_account_name" = {
+      value = azurerm_storage_account.splunk_spillover_storage.name
+    }
+    "storage_access_key" = {
+      value = azurerm_storage_account.splunk_spillover_storage.primary_access_key
+    }
+  })
+  template_content = file("${path.root}/blob_connector_arm.json")
+}
 /*
 resource "null_resource" "set_input_queue_name" {
   triggers = {
