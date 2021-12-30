@@ -301,7 +301,7 @@ BODY
 }
 
 resource "azurerm_logic_app_action_custom" "to_blob" {
-  name         = "to_splunk"
+  name         = "to_blob"
   logic_app_id = azurerm_logic_app_workflow.batch_receiver.id
 
   depends_on = [
