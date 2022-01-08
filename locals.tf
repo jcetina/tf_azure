@@ -26,6 +26,8 @@ locals {
 
   batch_receiver_logic_app_name = "${var.prefix}-batch-receiver"
 
+  send_to_splunk_logic_app_name = "${var.prefix}-send-to-splunk"
+
   blob_connector_name = "${var.prefix}-blob-connector"
 
   queue_connector_name = "${var.prefix}-queue-connector"

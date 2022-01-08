@@ -49,7 +49,7 @@ data "archive_file" "logic_app" {
 }
 
 resource "azurerm_logic_app_standard" "send_to_splunk" {
-  name                       = "${var.prefix}-send-to-splunk"
+  name                       = local.send_to_splunk_logic_app_name
   resource_group_name        = azurerm_resource_group.log_pipeline.name
   location                   = azurerm_resource_group.log_pipeline.location
   app_service_plan_id        = azurerm_app_service_plan.plan.id
@@ -67,10 +67,10 @@ resource "azurerm_logic_app_standard" "send_to_splunk" {
     "SplunkHecUrl"                            = var.splunk_endpoint
     "SplunkHecToken"                          = var.hec_token_value
     "EventQueueConnApiId"                     = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.Web/locations/${azurerm_resource_group.log_pipeline.location}/managedApis/azurequeues"
-    "EventQueueConnectionId"                  = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/sites/${self.name}/connections/EventQueueConnector"
+    "EventQueueConnectionId"                  = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/sites/${local.send_to_splunk_logic_app_name}/connections/EventQueueConnector"
     "EventQueueConnectionKey"                 = azurerm_storage_account.storage.primary_access_key
     "EventQueueName"                          = azurerm_storage_queue.queues[local.event_output_queue].name
-    "BatchWorkflowId"                         = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/sites/${self.name}/workflows/BatchToSplunk"
+    "BatchWorkflowId"                         = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${azurerm_resource_group.log_pipeline.name}/providers/Microsoft.Web/sites/${local.send_to_splunk_logic_app_name}/workflows/BatchToSplunk"
   }
 
   identity {
