@@ -11,7 +11,7 @@
     }
   },
   "managedApiConnections": {
-    "EventQueueConnector": {
+    "azurequeues": {
       "api": {
         "id": "@appsetting('EventQueueConnApiId')"
       },

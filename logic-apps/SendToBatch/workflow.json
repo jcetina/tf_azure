@@ -6,7 +6,7 @@
                 "inputs": {
                     "host": {
                         "connection": {
-                            "referenceName": "EventQueueConnector"
+                            "referenceName": "azurequeues"
                         }
                     },
                     "method": "delete",
@@ -43,7 +43,7 @@
                 "inputs": {
                     "host": {
                         "connection": {
-                            "referenceName": "EventQueueConnector"
+                            "referenceName": "azurequeues"
                         }
                     },
                     "method": "get",
