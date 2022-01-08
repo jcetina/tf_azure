@@ -78,7 +78,7 @@ resource "azurerm_logic_app_standard" "send_to_splunk" {
   }
 }
 
-resource "azurerm_role_assignment" "func_reader" {
+resource "azurerm_role_assignment" "logic_reader" {
   scope                = azurerm_storage_account.storage.id
   role_definition_name = "Storage Blob Data Reader"
   principal_id         = azurerm_logic_app_standard.send_to_splunk.identity.0.principal_id
