@@ -1,0 +1,28 @@
+{
+  "serviceProviderConnections": {
+    "SpilloverBlobConnector": {
+      "parameterValues": {
+        "connectionString": "@appsetting('SpilloverBlobConnector_connectionString')"
+      },
+      "serviceProvider": {
+        "id": "/serviceProviders/AzureBlob"
+      },
+      "displayName": "SpilloverBlobConnector"
+    }
+  },
+  "managedApiConnections": {
+    "EventQueueConnector": {
+      "api": {
+        "id": "@appsetting('EventQueueConnApiId')"
+      },
+      "connection": {
+        "id": "@appsetting('EventQueueConnectionId')"
+      },
+      "authentication": {
+        "type": "Raw",
+        "scheme": "Key",
+        "parameter": "@appsetting('EventQueueConnectionKey')"
+      }
+    }
+  }
+}

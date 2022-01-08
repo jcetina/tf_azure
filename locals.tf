@@ -15,6 +15,8 @@ locals {
 
   func_app_blob_name = "${var.prefix}-func-code-${filemd5(data.archive_file.function_zip.output_path)}.zip"
 
+  logic_app_blob_name = "${filemd5(data.archive_file.logic_app.output_path)}.zip"
+
   categories = {
     activitylogs = {
       eventhub_partitions = 4

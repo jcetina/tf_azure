@@ -1,0 +1,63 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "Delete_message_(V2)": {
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "referenceName": "EventQueueConnector"
+                        }
+                    },
+                    "method": "delete",
+                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/queues/@{encodeURIComponent(appsetting('EventQueueName'))}/messages/@{encodeURIComponent(triggerBody()?['MessageId'])}",
+                    "queries": {
+                        "popreceipt": "@triggerBody()?['PopReceipt']"
+                    }
+                },
+                "runAfter": {
+                    "queue-receiver": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ApiConnection"
+            },
+            "queue-receiver": {
+                "inputs": {
+                    "batchName": "SplunkBatch",
+                    "content": "@triggerBody()?['MessageText']",
+                    "host": {
+                        "triggerName": "ghazuretelemetry-batch-trigger",
+                        "workflow": {
+                            "id": "/subscriptions/91021fff-6a53-480a-99bf-2167d177e559/resourceGroups/rg-telemetry-pipeline/providers/Microsoft.Logic/workflows/ghazuretelemetry-batch-receiver-logic"
+                        }
+                    }
+                },
+                "runAfter": {},
+                "type": "SendToBatch"
+            }
+        },
+        "triggers": {
+            "When_there_are_messages_in_a_queue_(V2)": {
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "referenceName": "EventQueueConnector"
+                        }
+                    },
+                    "method": "get",
+                    "path": "/v2/storageAccounts/@{encodeURIComponent(encodeURIComponent('AccountNameFromSettings'))}/queues/@{encodeURIComponent(appsetting('EventQueueName'))}/message_trigger"
+                },
+                "recurrence": {
+                    "frequency": "Minute",
+                    "interval": 1
+                },
+                "splitOn": "@triggerBody()?['QueueMessagesList']?['QueueMessage']"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {}
+    },
+    "kind": "Stateful"
+}

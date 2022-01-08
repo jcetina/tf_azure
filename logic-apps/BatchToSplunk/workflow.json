@@ -1,0 +1,111 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "for_each": {
+                "type": "Foreach",
+                "foreach": "@triggerBody()['items']",
+                "actions": {
+                    "Append_to_string_variable": {
+                        "type": "AppendToStringVariable",
+                        "inputs": {
+                            "name": "output",
+                            "value": "@concat(items('for_each')['content'], '\n')"
+                        },
+                        "runAfter": {}
+                    }
+                },
+                "runAfter": {
+                    "init_output": [
+                        "Succeeded"
+                    ]
+                },
+                "runtimeConfiguration": {
+                    "concurrency": {
+                        "repetitions": 1
+                    }
+                }
+            },
+            "init_output": {
+                "type": "InitializeVariable",
+                "inputs": {
+                    "variables": [
+                        {
+                            "name": "output",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "runAfter": {}
+            },
+            "to_splunk": {
+                "type": "Http",
+                "inputs": {
+                    "method": "POST",
+                    "uri": "@appsetting('SplunkHecUrl')",
+                    "headers": {
+                        "Authorization": "@{concat('Splunk ', appsetting('SplunkHecToken'))}"
+                    },
+                    "body": "@variables('output')",
+                    "retryPolicy": {
+                        "type": "fixed",
+                        "count": 1,
+                        "interval": "PT10S"
+                    }
+                },
+                "runAfter": {
+                    "for_each": [
+                        "Succeeded"
+                    ]
+                },
+                "limit": {
+                    "timeout": "PT60S"
+                }
+            },
+            "fail_to_blob_storage": {
+                "type": "ServiceProvider",
+                "inputs": {
+                    "parameters": {
+                        "containerName": "spillover",
+                        "blobName": "@{concat(formatDateTime(utcNow(), '/yyyy/MM/dd/hh/mm/'), guid(), '.jsonl')}",
+                        "content": "@variables('output')"
+                    },
+                    "serviceProviderConfiguration": {
+                        "connectionName": "AzureBlob",
+                        "operationId": "uploadBlob",
+                        "serviceProviderId": "/serviceProviders/AzureBlob"
+                    }
+                },
+                "runAfter": {
+                    "to_splunk": [
+                        "TIMEDOUT",
+                        "SKIPPED",
+                        "FAILED"
+                    ]
+                }
+            }
+        },
+        "triggers": {
+            "ghazuretelemetry-batch-trigger": {
+                "type": "Batch",
+                "inputs": {
+                    "mode": "Inline",
+                    "configurations": {
+                        "SplunkBatch": {
+                            "releaseCriteria": {
+                                "messageCount":  "@appsetting('TriggerMessageCount')",
+                                "recurrence": {
+                                    "frequency": "Minute",
+                                    "interval": "@appsetting('TriggerIntervalMinutes')"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {}
+    },
+    "kind": "Stateful"
+}

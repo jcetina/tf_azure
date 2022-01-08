@@ -185,6 +185,7 @@ resource "azurerm_role_assignment" "log_reader" {
   principal_id         = azurerm_function_app.function_app.identity.0.principal_id
 }
 
+/*
 resource "azurerm_resource_group_template_deployment" "queue_connector" {
   name                = "queue_connector_deployment"
   resource_group_name = azurerm_resource_group.log_pipeline.name
@@ -237,7 +238,7 @@ resource "azurerm_resource_group_template_deployment" "batch_receiver_logic" {
   name                = "${var.prefix}-batch-receiver-logic-deployment"
   resource_group_name = azurerm_resource_group.log_pipeline.name
   deployment_mode     = "Incremental"
-  /*
+
   "workflows_batch_receiver_logic_name": {
             "type": "String"
         },
@@ -264,7 +265,7 @@ resource "azurerm_resource_group_template_deployment" "batch_receiver_logic" {
             "type": "Int",
             "defaultValue": 5
         }
-  */
+
   parameters_content = jsonencode({
     "workflows_batch_receiver_logic_name" = {
       value = local.batch_receiver_logic_app_name
@@ -294,6 +295,24 @@ resource "azurerm_resource_group_template_deployment" "batch_receiver_logic" {
   template_content = file("${path.module}/batch_receiver_logic_app_arm.json")
 }
 
+resource "azurerm_resource_group_template_deployment" "blob_connector" {
+  name                = "${var.prefix}-blob-connector"
+  resource_group_name = azurerm_resource_group.log_pipeline.name
+  deployment_mode     = "Incremental"
+  parameters_content = jsonencode({
+    "connections_azureblob_name" = {
+      value = local.blob_connector_name
+    }
+    "storage_account_name" = {
+      value = azurerm_storage_account.splunk_spillover_storage.name
+    }
+    "storage_access_key" = {
+      value = azurerm_storage_account.splunk_spillover_storage.primary_access_key
+    }
+  })
+  template_content = file("${path.root}/blob_connector_arm.json")
+}
+*/
 
 
 resource "null_resource" "python_dependencies" {
@@ -317,24 +336,6 @@ resource "azurerm_storage_container" "spillover_container" {
   name                  = "spillover"
   storage_account_name  = azurerm_storage_account.splunk_spillover_storage.name
   container_access_type = "private"
-}
-
-resource "azurerm_resource_group_template_deployment" "blob_connector" {
-  name                = "${var.prefix}-blob-connector"
-  resource_group_name = azurerm_resource_group.log_pipeline.name
-  deployment_mode     = "Incremental"
-  parameters_content = jsonencode({
-    "connections_azureblob_name" = {
-      value = local.blob_connector_name
-    }
-    "storage_account_name" = {
-      value = azurerm_storage_account.splunk_spillover_storage.name
-    }
-    "storage_access_key" = {
-      value = azurerm_storage_account.splunk_spillover_storage.primary_access_key
-    }
-  })
-  template_content = file("${path.root}/blob_connector_arm.json")
 }
 
 resource "random_string" "func_storage_account" {
